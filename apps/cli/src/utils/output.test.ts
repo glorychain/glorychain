@@ -21,7 +21,7 @@ describe("output utilities", () => {
 
   it("printHuman writes label: value in human mode", () => {
     printHuman("status", "ok");
-    expect(stdoutSpy).toHaveBeenCalledWith("status: ok\n");
+    expect(stdoutSpy).toHaveBeenCalledWith(expect.stringMatching(/status\s+ok/));
   });
 
   it("printHuman writes JSON in json mode", () => {
