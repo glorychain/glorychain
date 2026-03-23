@@ -7,7 +7,7 @@ dist/
 *.d.ts.map
 
 # Turbo
-.turbo/
+**/.turbo/
 
 # Environment
 .env
@@ -35,7 +35,3 @@ coverage/
 /_bmad
 /.claude/skills
 /.cursor/skills
-/apps/cli/.turbo
-/apps/conformance/.turbo
-/packages/core/.turbo
-/packages/fs/.turbo
