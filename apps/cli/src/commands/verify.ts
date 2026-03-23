@@ -1,6 +1,13 @@
 import { FsConnector } from "@glorychain/fs";
 import { Command } from "commander";
-import { isJsonMode, printError, printHuman, printJson, printSuccess, setJsonMode } from "../utils/output.js";
+import {
+  isJsonMode,
+  printError,
+  printHuman,
+  printJson,
+  printSuccess,
+  setJsonMode,
+} from "../utils/output.js";
 
 export function makeVerifyCommand(): Command {
   return new Command("verify")

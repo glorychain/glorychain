@@ -4,7 +4,15 @@ import { createChain, generateKeypair } from "@glorychain/core";
 import { FsConnector } from "@glorychain/fs";
 import { Command } from "commander";
 import { writeConfig } from "../utils/config.js";
-import { printError, printHuman, printJson, printSection, printStep, printSuccess, setJsonMode } from "../utils/output.js";
+import {
+  printError,
+  printHuman,
+  printJson,
+  printSection,
+  printStep,
+  printSuccess,
+  setJsonMode,
+} from "../utils/output.js";
 
 const GITHUB_WORKFLOW_GENESIS = `name: Glorychain genesis
 
@@ -41,8 +49,8 @@ jobs:
         run: |
           mkdir -p chains
           glorychain create \\
-            --key "\$CHAIN_PRIVATE_KEY" \\
-            --pubkey "\$CHAIN_PUBLIC_KEY" \\
+            --key "$CHAIN_PRIVATE_KEY" \\
+            --pubkey "$CHAIN_PUBLIC_KEY" \\
             --content "$(cat CHAIN_CHARTER.md)" \\
             --purpose "github-audit-log" \\
             --dir chains
@@ -94,8 +102,8 @@ jobs:
         run: |
           glorychain append \\
             --chain "\${{ steps.check.outputs.chain_id }}" \\
-            --key "\$CHAIN_PRIVATE_KEY" \\
-            --pubkey "\$CHAIN_PUBLIC_KEY" \\
+            --key "$CHAIN_PRIVATE_KEY" \\
+            --pubkey "$CHAIN_PUBLIC_KEY" \\
             --content "MERGE: \${{ github.event.head_commit.message }} — \${{ github.sha }}" \\
             --dir chains
 
@@ -186,9 +194,7 @@ export function makeInitCommand(): Command {
           if (!opts.json) {
             printHuman("created", ".github/workflows/chain-genesis.yml");
             printHuman("created", ".github/workflows/chain-append.yml");
-            printSection(
-              "Add CHAIN_PRIVATE_KEY and CHAIN_PUBLIC_KEY to your GitHub repo secrets",
-            );
+            printSection("Add CHAIN_PRIVATE_KEY and CHAIN_PUBLIC_KEY to your GitHub repo secrets");
           }
         }
 
@@ -247,7 +253,9 @@ export function makeInitCommand(): Command {
           printSuccess("Initialised");
           printSection("Next steps");
           printStep("glorychain keygen");
-          printStep(`glorychain create --key <key> --pubkey <pubkey> --content "$(cat CHAIN_CHARTER.md)"`);
+          printStep(
+            `glorychain create --key <key> --pubkey <pubkey> --content "$(cat CHAIN_CHARTER.md)"`,
+          );
           if (!opts.github) {
             printStep("glorychain init --github   # scaffold GitHub Actions workflows");
           }
