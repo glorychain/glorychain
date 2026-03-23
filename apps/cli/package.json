@@ -1,0 +1,34 @@
+{
+  "name": "glorychain",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Glory Chain CLI",
+  "bin": {
+    "glorychain": "./dist/index.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@glorychain/core": "workspace:*",
+    "@glorychain/fs": "workspace:*",
+    "@glorychain/github": "workspace:*",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@types/node": "^22.0.0",
+    "tsdown": "latest",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,151 @@
+# generated: 2026-03-22
+# last_updated: 2026-03-22
+# project: glory-chain
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-03-22
+last_updated: 2026-03-22
+project: glory-chain
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 1: Monorepo Foundation & Shared Config  [MVP 1]
+  # ─────────────────────────────────────────────────────────────
+  epic-1: done
+  1-1-monorepo-scaffold-and-workspace-config: done
+  1-2-shared-internal-package: done
+  epic-1-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 2: Core Protocol Library  [MVP 1]
+  # ─────────────────────────────────────────────────────────────
+  epic-2: in-progress
+  2-1-schema-types-and-zod-validators: done
+  2-2-cryptographic-primitives: done
+  2-3-chain-lifecycle-create-append-fork-migrate: done
+  2-4-block-construction-and-inspection: done
+  2-5-verification-engine: done
+  2-6-rss-atom-feed-generator: done
+  2-7-package-bundling-and-public-api-surface: done
+  epic-2: done
+  epic-2-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 3: File System Connector  [MVP 1]
+  # ─────────────────────────────────────────────────────────────
+  epic-3: done
+  3-1-fsconnector-implementation: done
+  3-2-threat-detection-file-watch: done
+  3-3-integration-tests: done
+  epic-3: done
+  epic-3-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 4: CLI  [MVP 1]
+  # ─────────────────────────────────────────────────────────────
+  epic-4: done
+  4-1-cli-scaffold-and-config-utilities: done
+  4-2-chain-lifecycle-commands: done
+  4-3-utility-commands-keygen-inspect-export: done
+  epic-4-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 5: Conformance CLI and GitHub Connector  [MVP 1]
+  # ─────────────────────────────────────────────────────────────
+  epic-5: done
+  5-1-conformance-cli-scaffold: done
+  5-2-conformance-test-suites: done
+  5-3-github-connector-implementation: done
+  5-4-github-connector-threat-detection-and-integration-tests: done
+  epic-5-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 6: SaaS Foundation — Auth, DB Schema, and Infrastructure  [MVP 2]
+  # ─────────────────────────────────────────────────────────────
+  epic-6: in-progress
+  6-1-nextjs-app-scaffold-and-env-validation: done
+  6-2-authjs-v5-oauth-integration: done
+  6-3-drizzle-database-schema-and-migrations: done
+  6-4-saas-key-custody-envelope-encryption: done
+  6-5-trpc-setup-and-account-router: done
+  epic-6: done
+  epic-6-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 7: SaaS Chain Management  [MVP 2]
+  # ─────────────────────────────────────────────────────────────
+  epic-7: in-progress
+  7-1-chain-creation-flow: done
+  7-2-block-append-flow: done
+  7-3-dashboard-and-chain-management-ui: done
+  7-4-suggestion-queue-owner-ui: done
+  epic-7: done
+  epic-7-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 8: Public Read Experience and RSS  [MVP 2]
+  # ─────────────────────────────────────────────────────────────
+  epic-8: in-progress
+  8-1-public-chain-read-page: done
+  8-2-public-rest-api-chain-json-and-block-permalink: done
+  8-3-rss-atom-feed-endpoint: done
+  8-4-public-suggestion-submission: done
+  8-5-fork-lineage-display: done
+  epic-8: done
+  epic-8-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 9: Settings, Export, and MVP 2 Completion  [MVP 2]
+  # ─────────────────────────────────────────────────────────────
+  epic-9: in-progress
+  9-1-settings-page-key-export-and-account-management: done
+  9-2-chain-export-and-offline-verification: done
+  9-3-saas-verification-endpoint: done
+  9-4-nfr-compliance-pass: done
+  epic-9: done
+  epic-9-retrospective: optional
+
+  # ─────────────────────────────────────────────────────────────
+  # EPIC 10: GitHub Project Scaffolding & Contributor Workflow  [MVP 1]
+  # ─────────────────────────────────────────────────────────────
+  epic-10: done
+  10-1-init-command: done
+  10-2-verify-workflow-template: done
+  10-3-pr-and-issue-templates: done
+  10-4-charter-and-contributing: done
+  10-5-template-command: done
+  epic-10-retrospective: optional

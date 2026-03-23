@@ -1,0 +1,33 @@
+{
+  "name": "@glorychain/shared",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Glory Chain shared Zod validators — consumed by apps/web server and client",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "tsdown": "latest",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.0"
+  },
+  "publishConfig": { "access": "public" }
+}

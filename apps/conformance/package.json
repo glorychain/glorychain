@@ -1,0 +1,32 @@
+{
+  "name": "glorychain-conformance",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Glory Chain conformance test CLI",
+  "bin": {
+    "glorychain-conformance": "./dist/index.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@glorychain/core": "workspace:*",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@types/node": "^22.0.0",
+    "tsdown": "latest",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

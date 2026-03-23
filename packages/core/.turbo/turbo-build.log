@@ -1,0 +1,16 @@
+
+> @glorychain/core@0.0.1 build /Users/finnfitzsimons3/Documents/GitHub/glory-chain/packages/core
+> tsdown
+
+ℹ tsdown v0.21.4 powered by rolldown v1.0.0-rc.9
+ℹ config file: /Users/finnfitzsimons3/Documents/GitHub/glory-chain/packages/core/tsdown.config.ts 
+ℹ entry: src/index.ts
+ℹ tsconfig: tsconfig.json
+ℹ Build start
+ℹ Cleaning 4 files
+ℹ dist/index.mjs        17.89 kB │ gzip: 4.16 kB
+ℹ dist/index.mjs.map    39.23 kB │ gzip: 9.10 kB
+ℹ dist/index.d.mts.map   4.09 kB │ gzip: 1.15 kB
+ℹ dist/index.d.mts       8.99 kB │ gzip: 2.43 kB
+ℹ 4 files, total: 70.20 kB
+✔ Build complete in 523ms

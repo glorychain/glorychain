@@ -1,0 +1,4 @@
+
+> @glory-chain/github@0.0.1 typecheck /Users/finnfitzsimons3/Documents/GitHub/glory-chain/packages/github
+> tsc --noEmit
+

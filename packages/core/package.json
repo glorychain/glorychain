@@ -1,0 +1,41 @@
+{
+  "name": "@glorychain/core",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Glory Chain core protocol library — zero runtime dependencies",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "ajv": ">=8"
+  },
+  "peerDependenciesMeta": {
+    "ajv": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@types/node": "^22.0.0",
+    "ajv": "^8.17.1",
+    "fast-check": "^4.5.0",
+    "tsdown": "latest",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.0"
+  },
+  "publishConfig": { "access": "public" }
+}

@@ -1,0 +1,8 @@
+/_bmad
+/apps/cli/node_modules
+/apps/conformance/node_modules
+/node_modules
+/packages/core/node_modules
+/packages/fs/node_modules
+/packages/github/node_modules
+/packages/shared/node_modules

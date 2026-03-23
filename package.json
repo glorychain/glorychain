@@ -1,0 +1,24 @@
+{
+  "name": "glorychain",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.32.0",
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=10.32"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "format": "biome format --write .",
+    "release": "turbo build && changeset publish"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@changesets/cli": "^2.30.0",
+    "turbo": "^2.8.0",
+    "typescript": "^5.9.0"
+  }
+}

@@ -1,0 +1,4 @@
+
+> glory-chain-conformance@0.0.1 typecheck /Users/finnfitzsimons3/Documents/GitHub/glory-chain/apps/conformance
+> tsc --noEmit
+
