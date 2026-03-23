@@ -27,4 +27,4 @@ jobs:
         run: pnpm build
 
       - name: Run conformance suite
-        run: pnpm --filter @glorychain/conformance start
+        run: node apps/conformance/dist/index.mjs
