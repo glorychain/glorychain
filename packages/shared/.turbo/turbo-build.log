@@ -1,16 +1,17 @@
 
-> @glorychain/shared@0.0.1 build /Users/finnfitzsimons3/Documents/GitHub/glory-chain/packages/shared
+
+> @glorychain/shared@0.0.1 build /Users/finnfitzsimons3/Documents/GitHub/glorychain/packages/shared
 > tsdown
 
-ℹ tsdown v0.21.4 powered by rolldown v1.0.0-rc.9
-ℹ config file: /Users/finnfitzsimons3/Documents/GitHub/glory-chain/packages/shared/tsdown.config.ts 
-ℹ entry: src/index.ts
-ℹ tsconfig: tsconfig.json
-ℹ Build start
-ℹ Cleaning 4 files
-ℹ dist/index.mjs        1.62 kB │ gzip: 0.73 kB
-ℹ dist/index.mjs.map    3.53 kB │ gzip: 1.33 kB
-ℹ dist/index.d.mts.map  0.63 kB │ gzip: 0.26 kB
-ℹ dist/index.d.mts      3.43 kB │ gzip: 0.75 kB
-ℹ 4 files, total: 9.21 kB
-✔ Build complete in 569ms
+[34mℹ[39m tsdown [2mv0.21.4[22m powered by rolldown [2mv1.0.0-rc.9[22m
+[34mℹ[39m config file: [4m/Users/finnfitzsimons3/Documents/GitHub/glorychain/packages/shared/tsdown.config.ts[24m 
+[34mℹ[39m entry: [34msrc/index.ts[39m
+[34mℹ[39m tsconfig: [34mtsconfig.json[39m
+[34mℹ[39m Build start
+[34mℹ[39m Cleaning 4 files
+[34mℹ[39m [2mdist/[22m[1mindex.mjs[22m        [2m1.62 kB[22m [2m│ gzip: 0.73 kB[22m
+[34mℹ[39m [2mdist/[22mindex.mjs.map    [2m3.53 kB[22m [2m│ gzip: 1.33 kB[22m
+[34mℹ[39m [2mdist/[22mindex.d.mts.map  [2m0.63 kB[22m [2m│ gzip: 0.26 kB[22m
+[34mℹ[39m [2mdist/[22m[32m[1mindex.d.mts[22m[39m      [2m3.43 kB[22m [2m│ gzip: 0.75 kB[22m
+[34mℹ[39m 4 files, total: 9.21 kB
+[32m✔[39m Build complete in [32m701ms[39m

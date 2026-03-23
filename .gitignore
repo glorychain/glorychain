@@ -6,3 +6,4 @@
 /packages/fs/node_modules
 /packages/github/node_modules
 /packages/shared/node_modules
+/.turbo

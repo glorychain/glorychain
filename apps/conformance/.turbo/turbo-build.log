@@ -1,6 +1,6 @@
 
 
-> glorychain-conformance@0.0.1 build /Users/finnfitzsimons3/Documents/GitHub/glorychain/apps/conformance
+> @glorychain/conformance@0.0.1 build /Users/finnfitzsimons3/Documents/GitHub/glorychain/apps/conformance
 > tsdown
 
 [34mℹ[39m tsdown [2mv0.21.4[22m powered by rolldown [2mv1.0.0-rc.9[22m
@@ -13,4 +13,4 @@
 [34mℹ[39m [2mdist/[22m[1mindex.mjs[22m      [2m12.38 kB[22m [2m│ gzip: 2.06 kB[22m
 [34mℹ[39m [2mdist/[22mindex.mjs.map  [2m24.05 kB[22m [2m│ gzip: 3.78 kB[22m
 [34mℹ[39m 2 files, total: 36.44 kB
-[32m✔[39m Build complete in [32m17ms[39m
+[32m✔[39m Build complete in [32m16ms[39m

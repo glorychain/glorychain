@@ -1,6 +1,6 @@
 {
   "name": "@glorychain/core",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "description": "Glory Chain core protocol library — zero runtime dependencies",
   "main": "./dist/index.mjs",
@@ -37,5 +37,7 @@
     "typescript": "^5.9.0",
     "vitest": "^4.1.0"
   },
-  "publishConfig": { "access": "public" }
+  "publishConfig": {
+    "access": "public"
+  }
 }
