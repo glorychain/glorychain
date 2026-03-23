@@ -1,6 +1,6 @@
 import { CUSTODY_WARNING, generateKeypair } from "@glorychain/core";
 import { Command } from "commander";
-import { isJsonMode, printHuman, printJson, setJsonMode } from "../utils/output.js";
+import { isJsonMode, printHuman, printJson, printSection, setJsonMode } from "../utils/output.js";
 
 export function makeKeygenCommand(): Command {
   return new Command("keygen")
@@ -18,6 +18,7 @@ export function makeKeygenCommand(): Command {
       if (isJsonMode()) {
         printJson({ publicKey: result.value.publicKey, privateKey: result.value.privateKey });
       } else {
+        printSection("Generated keypair");
         printHuman("publicKey", result.value.publicKey);
         printHuman("privateKey", result.value.privateKey);
       }

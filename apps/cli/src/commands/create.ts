@@ -1,7 +1,7 @@
 import { createChain } from "@glorychain/core";
 import { FsConnector } from "@glorychain/fs";
 import { Command } from "commander";
-import { printError, printHuman, setJsonMode } from "../utils/output.js";
+import { printError, printHuman, printSuccess, setJsonMode } from "../utils/output.js";
 
 export function makeCreateCommand(): Command {
   return new Command("create")
@@ -40,6 +40,7 @@ export function makeCreateCommand(): Command {
           process.exit(1);
         }
         await connector.write(result.value);
+        printSuccess("Chain created");
         printHuman("chainId", result.value.metadata.chainId);
       },
     );

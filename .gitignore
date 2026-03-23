@@ -1,9 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.js.map
+*.d.ts.map
+
+# Turbo
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test outputs
+coverage/
+
+# BMAD (agent scaffolding — not part of the project)
 /_bmad
-/apps/cli/node_modules
-/apps/conformance/node_modules
-/node_modules
-/packages/core/node_modules
-/packages/fs/node_modules
-/packages/github/node_modules
-/packages/shared/node_modules
-/.turbo
+/.claude/skills
+/.cursor/skills
+/apps/cli/.turbo
+/apps/conformance/.turbo
+/packages/core/.turbo

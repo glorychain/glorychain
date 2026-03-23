@@ -14,4 +14,4 @@
 [34mℹ[39m [2mdist/[22mindex.d.mts.map  [2m0.63 kB[22m [2m│ gzip: 0.26 kB[22m
 [34mℹ[39m [2mdist/[22m[32m[1mindex.d.mts[22m[39m      [2m3.43 kB[22m [2m│ gzip: 0.75 kB[22m
 [34mℹ[39m 4 files, total: 9.21 kB
-[32m✔[39m Build complete in [32m701ms[39m
+[32m✔[39m Build complete in [32m578ms[39m

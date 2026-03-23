@@ -1,7 +1,7 @@
 import { inspectBlock } from "@glorychain/core";
 import { FsConnector } from "@glorychain/fs";
 import { Command } from "commander";
-import { isJsonMode, printError, printHuman, printJson, setJsonMode } from "../utils/output.js";
+import { isJsonMode, printError, printHuman, printJson, printSection, setJsonMode } from "../utils/output.js";
 
 export function makeInspectCommand(): Command {
   return new Command("inspect")
@@ -27,6 +27,7 @@ export function makeInspectCommand(): Command {
       if (isJsonMode()) {
         printJson(inspection);
       } else {
+        printSection(`Block #${blockIndex}`);
         printHuman("type", inspection.type);
         printHuman("blockNumber", String(inspection.block.blockNumber));
         printHuman("hash", inspection.block.hash);

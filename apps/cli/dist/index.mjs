@@ -12,15 +12,49 @@ function setJsonMode(enabled) {
 function isJsonMode() {
 	return jsonMode;
 }
+const isTTY = process.stdout.isTTY;
+const c = {
+	reset: isTTY ? "\x1B[0m" : "",
+	bold: isTTY ? "\x1B[1m" : "",
+	dim: isTTY ? "\x1B[2m" : "",
+	green: isTTY ? "\x1B[32m" : "",
+	cyan: isTTY ? "\x1B[36m" : "",
+	yellow: isTTY ? "\x1B[33m" : "",
+	red: isTTY ? "\x1B[31m" : "",
+	magenta: isTTY ? "\x1B[35m" : "",
+	gray: isTTY ? "\x1B[90m" : ""
+};
 function printJson(data) {
 	process.stdout.write(JSON.stringify(data, null, 2) + "\n");
 }
+/** Key: value line, e.g. "  chainId  abc123" */
 function printHuman(label, value) {
-	if (jsonMode) printJson({ [label]: value });
-	else process.stdout.write(`${label}: ${value}\n`);
+	if (jsonMode) {
+		printJson({ [label]: value });
+		return;
+	}
+	const key = `${c.gray}${label.padEnd(14)}${c.reset}`;
+	process.stdout.write(`  ${key}${c.cyan}${value}${c.reset}\n`);
 }
+/** ✔ success banner */
+function printSuccess(message) {
+	if (jsonMode) return;
+	process.stdout.write(`\n${c.green}${c.bold}✔${c.reset}  ${c.bold}${message}${c.reset}\n\n`);
+}
+/** ✘ error banner (stderr) */
 function printError(message) {
-	process.stderr.write(`Error: ${message}\n`);
+	const prefix = `${c.red}${c.bold}✘${c.reset}  `;
+	process.stderr.write(`${prefix}${message}\n`);
+}
+/** Dimmed section header */
+function printSection(title) {
+	if (jsonMode) return;
+	process.stdout.write(`\n${c.bold}${c.magenta}${title}${c.reset}\n`);
+}
+/** Bullet list item */
+function printStep(message) {
+	if (jsonMode) return;
+	process.stdout.write(`  ${c.gray}›${c.reset}  ${message}\n`);
 }
 //#endregion
 //#region src/commands/append.ts
@@ -41,6 +75,7 @@ function makeAppendCommand() {
 		}
 		await connector.write(result.value);
 		const blockNumber = result.value.blocks.length - 1;
+		printSuccess("Block appended");
 		printHuman("blockNumber", String(blockNumber));
 	});
 }
@@ -62,6 +97,7 @@ function makeCreateCommand() {
 			process.exit(1);
 		}
 		await connector.write(result.value);
+		printSuccess("Chain created");
 		printHuman("chainId", result.value.metadata.chainId);
 	});
 }
@@ -138,7 +174,7 @@ function makeInitCommand() {
 		if (opts.json) setJsonMode(true);
 		const chainsDir = resolve(opts.dir);
 		await mkdir(chainsDir, { recursive: true });
-		if (!opts.json) printHuman("created", opts.dir);
+		if (!opts.json) printHuman("chains dir", opts.dir);
 		await writeConfig({
 			connector: "fs",
 			chainIds: []
@@ -174,14 +210,11 @@ function makeInitCommand() {
 				}
 				privateKey = kp.value.privateKey;
 				publicKey = kp.value.publicKey;
-				if (!opts.json) process.stdout.write([
-					"",
-					"Generated keypair — save your private key, it cannot be recovered:",
-					`  Public key:  ${publicKey}`,
-					`  Private key: ${privateKey}`,
-					""
-				].join("\n"));
-				else printJson({
+				if (!opts.json) {
+					printSection("Generated keypair — save your private key, it cannot be recovered");
+					printHuman("publicKey", publicKey);
+					printHuman("privateKey", privateKey);
+				} else printJson({
 					publicKey,
 					privateKey
 				});
@@ -198,16 +231,18 @@ function makeInitCommand() {
 				process.exit(1);
 			}
 			await new FsConnector(chainsDir).write(result.value);
-			if (!opts.json) printHuman("chainId", result.value.metadata.chainId);
-			else printJson({ chainId: result.value.metadata.chainId });
+			if (!opts.json) {
+				printSuccess("Genesis block created");
+				printHuman("chainId", result.value.metadata.chainId);
+			} else printJson({ chainId: result.value.metadata.chainId });
 		}
-		if (!opts.json) process.stdout.write([
-			"",
-			"Initialised. Next steps:",
-			`  glorychain keygen`,
-			`  glorychain create --key <key> --pubkey <pubkey> --content "$(cat CHAIN_CHARTER.md)"`,
-			""
-		].join("\n"));
+		if (!opts.json) {
+			printSuccess("Initialised");
+			printSection("Next steps");
+			printStep("glorychain keygen");
+			printStep(`glorychain create --key <key> --pubkey <pubkey> --content "$(cat CHAIN_CHARTER.md)"`);
+			process.stdout.write("\n");
+		}
 	});
 }
 //#endregion
@@ -228,6 +263,7 @@ function makeInspectCommand() {
 		const inspection = inspectBlock(block);
 		if (isJsonMode()) printJson(inspection);
 		else {
+			printSection(`Block #${blockIndex}`);
 			printHuman("type", inspection.type);
 			printHuman("blockNumber", String(inspection.block.blockNumber));
 			printHuman("hash", inspection.block.hash);
@@ -252,6 +288,7 @@ function makeKeygenCommand() {
 			privateKey: result.value.privateKey
 		});
 		else {
+			printSection("Generated keypair");
 			printHuman("publicKey", result.value.publicKey);
 			printHuman("privateKey", result.value.privateKey);
 		}
@@ -348,8 +385,11 @@ function makeVerifyCommand() {
 			process.exit(1);
 		});
 		if (isJsonMode()) printJson(result);
-		else {
-			printHuman("valid", String(result.valid));
+		else if (result.valid) {
+			printSuccess("Chain verified — all blocks intact");
+			printHuman("valid", "true");
+		} else {
+			printHuman("valid", "false");
 			for (const e of result.errors) printError(e);
 		}
 		if (!result.valid) process.exit(1);

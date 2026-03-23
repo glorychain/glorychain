@@ -67,14 +67,14 @@ declare const AppendBlockSchema: z.ZodObject<{
   publicKey: z.ZodOptional<z.ZodString>;
   signature: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-  content: string;
   chainId: string;
+  content: string;
   timestamp: string;
   publicKey?: string | undefined;
   signature?: string | undefined;
 }, {
-  content: string;
   chainId: string;
+  content: string;
   timestamp: string;
   publicKey?: string | undefined;
   signature?: string | undefined;
@@ -87,12 +87,12 @@ declare const SubmitSuggestionSchema: z.ZodObject<{
   content: z.ZodString;
   submitterNote: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-  chainSlug: string;
   content: string;
+  chainSlug: string;
   submitterNote?: string | undefined;
 }, {
-  chainSlug: string;
   content: string;
+  chainSlug: string;
   submitterNote?: string | undefined;
 }>;
 type SubmitSuggestionInput = z.infer<typeof SubmitSuggestionSchema>;

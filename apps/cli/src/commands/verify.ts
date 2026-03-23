@@ -1,6 +1,6 @@
 import { FsConnector } from "@glorychain/fs";
 import { Command } from "commander";
-import { isJsonMode, printError, printHuman, printJson, setJsonMode } from "../utils/output.js";
+import { isJsonMode, printError, printHuman, printJson, printSuccess, setJsonMode } from "../utils/output.js";
 
 export function makeVerifyCommand(): Command {
   return new Command("verify")
@@ -17,8 +17,11 @@ export function makeVerifyCommand(): Command {
       });
       if (isJsonMode()) {
         printJson(result);
+      } else if (result.valid) {
+        printSuccess("Chain verified — all blocks intact");
+        printHuman("valid", "true");
       } else {
-        printHuman("valid", String(result.valid));
+        printHuman("valid", "false");
         for (const e of result.errors) {
           printError(e);
         }

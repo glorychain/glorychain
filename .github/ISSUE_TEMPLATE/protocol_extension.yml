@@ -1,0 +1,44 @@
+name: Protocol extension proposal
+description: Propose a change to the glorychain protocol spec
+labels: [protocol, discussion]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Protocol changes affect every connector, every implementation, and every existing chain.
+        Please be thorough — these proposals go through broader review before acceptance.
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      placeholder: What limitation or capability gap is this addressing?
+    validations:
+      required: true
+
+  - type: textarea
+    id: spec
+    attributes:
+      label: Proposed spec change
+      placeholder: |
+        Describe the change at the protocol level:
+        - New fields, removed fields, changed semantics
+        - Block structure impact
+        - Verification rule changes
+        - Backwards compatibility
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact on existing chains
+      placeholder: Are existing chains still valid under this change?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: Reference implementation sketch
+      placeholder: Optional — pseudocode or TypeScript sketch of the change.

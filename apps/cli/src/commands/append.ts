@@ -1,7 +1,7 @@
 import { appendBlock } from "@glorychain/core";
 import { FsConnector } from "@glorychain/fs";
 import { Command } from "commander";
-import { printError, printHuman, setJsonMode } from "../utils/output.js";
+import { printError, printHuman, printSuccess, setJsonMode } from "../utils/output.js";
 
 export function makeAppendCommand(): Command {
   return new Command("append")
@@ -38,6 +38,7 @@ export function makeAppendCommand(): Command {
         }
         await connector.write(result.value);
         const blockNumber = result.value.blocks.length - 1;
+        printSuccess("Block appended");
         printHuman("blockNumber", String(blockNumber));
       },
     );
