@@ -30,7 +30,7 @@ export function makeVerifyCommand(): Command {
       } else {
         printHuman("valid", "false");
         for (const e of result.errors) {
-          printError(e);
+          printError(`block ${e.blockNumber}: ${e.message}`);
         }
       }
       if (!result.valid) process.exit(1);
