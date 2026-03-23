@@ -28,8 +28,6 @@ Immutable, cryptographically signed chains of records. Every block tamper-eviden
 | [`glorychain` CLI](apps/cli) | Full lifecycle management from the terminal |
 | [Conformance suite](apps/conformance) | Protocol compliance testing |
 
-> SaaS platform: [glorychain-saas][saas_url]
-
 ---
 
 ## Use cases
@@ -61,6 +59,16 @@ Block 0  "I am creating this chain to document my climate commitments. Permanent
 Block 1  "Voted YES on Clean Energy Transition Act (SB-412). Passed 52–48."
 ```
 
+### 🏢 Org hierarchy — `acme-corp-members`
+```
+Block 0  "Canonical membership and reporting structure for Acme Corp."
+Block 1  "APPOINT: Sarah Chen → Chief Executive Officer."
+Block 2  "APPOINT: James Okafor → VP Engineering, reports to: Sarah Chen."
+Block 3  "APPOINT: Liu Wei → Staff Engineer, reports to: James Okafor."
+Block 4  "PROMOTE: Liu Wei → Principal Engineer."
+Block 5  "DEPART: James Okafor. Direct reports reassigned to: Sarah Chen (interim)."
+```
+
 ### 🖥️ Audit trails — `production-api-infra`
 ```
 Block 0  "Automated audit trail for all production deployments and config changes."
@@ -73,7 +81,7 @@ Block 2  "CONFIG: rate_limit_multiplier 1.0 → 1.5. Approved by: oncall-lead@co
 ## Getting started
 
 ```bash
-pnpm install && pnpm turbo build
+npm i -g @glorychain/cli
 ```
 
 ```bash

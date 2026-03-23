@@ -1,5 +1,5 @@
 {
-  "name": "glorychain-conformance",
+  "name": "@glorychain/conformance",
   "version": "0.0.1",
   "type": "module",
   "description": "Glory Chain conformance test CLI",
