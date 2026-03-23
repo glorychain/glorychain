@@ -1,6 +1,6 @@
 
 
-> @glorychain/cli@0.0.2 build /Users/finnfitzsimons3/Documents/GitHub/glorychain/apps/cli
+> @glorychain/cli@0.0.3 build /Users/finnfitzsimons3/Documents/GitHub/glorychain/apps/cli
 > tsdown
 
 [34mℹ[39m tsdown [2mv0.21.4[22m powered by rolldown [2mv1.0.0-rc.9[22m
@@ -11,7 +11,7 @@
 [34mℹ[39m Build start
 [34mℹ[39m Cleaning 2 files
 [34mℹ[39m Granting execute permission to [4mdist/index.mjs[24m
-[34mℹ[39m [2mdist/[22m[1mindex.mjs[22m      [2m14.62 kB[22m [2m│ gzip: 3.49 kB[22m
-[34mℹ[39m [2mdist/[22mindex.mjs.map  [2m31.63 kB[22m [2m│ gzip: 6.45 kB[22m
-[34mℹ[39m 2 files, total: 46.25 kB
-[32m✔[39m Build complete in [32m15ms[39m
+[34mℹ[39m [2mdist/[22m[1mindex.mjs[22m      [2m19.91 kB[22m [2m│ gzip: 4.83 kB[22m
+[34mℹ[39m [2mdist/[22mindex.mjs.map  [2m39.33 kB[22m [2m│ gzip: 8.32 kB[22m
+[34mℹ[39m 2 files, total: 59.24 kB
+[32m✔[39m Build complete in [32m18ms[39m

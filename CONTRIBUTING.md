@@ -111,7 +111,49 @@ We don't enforce a strict format, but be descriptive. Reference issue numbers wh
 
 ## Releasing
 
-Releases are managed with [Changesets](https://github.com/changesets/changesets). The release workflow creates a version PR automatically when changesets are present on `main`. Merging that PR publishes to npm.
+Releases are managed with [Changesets](https://github.com/changesets/changesets) and triggered automatically by CI.
+
+### How it works
+
+1. **During development** — whenever a PR changes a public API, the author adds a changeset describing the change and its semver impact:
+   ```bash
+   pnpm changeset
+   # Select affected packages, choose patch/minor/major, write a summary
+   # This creates a file in .changeset/ — commit it with your PR
+   ```
+
+2. **On merge to `main`** — the [release workflow](.github/workflows/release.yml) runs. It detects any `.changeset/` files and opens (or updates) a **Version PR** titled `chore: release packages`. This PR:
+   - Bumps the version in each affected `package.json`
+   - Updates `CHANGELOG.md` for each package
+   - Consumes (deletes) the changeset files
+
+3. **To publish** — merge the Version PR. The same workflow detects that changesets have been consumed and runs `pnpm release`, which builds all packages and publishes them to npm.
+
+### Semver guide
+
+| Change | Bump |
+|---|---|
+| Bug fix, internal change | `patch` |
+| New public API (backwards compatible) | `minor` |
+| Protocol change, breaking API change | `major` |
+
+### Prerequisites for publishing
+
+- `NPM_TOKEN` secret must be set in the repo (Settings → Secrets → Actions)
+- The token must have publish access to the `@glorychain` npm scope
+
+### Manual release (maintainers only)
+
+If CI is unavailable:
+
+```bash
+pnpm install
+pnpm build
+pnpm changeset version   # bump versions + update changelogs
+git add . && git commit -m "chore: release packages"
+pnpm changeset publish   # publish to npm
+git push --follow-tags
+```
 
 ---
 
