@@ -1,6 +1,13 @@
 import { FsConnector } from "@glorychain/fs";
 import { Command } from "commander";
-import { isJsonMode, printError, printHuman, printJson, printSuccess, setJsonMode } from "../utils/output.js";
+import {
+  isJsonMode,
+  printError,
+  printHuman,
+  printJson,
+  printSuccess,
+  setJsonMode,
+} from "../utils/output.js";
 
 export function makeVerifyCommand(): Command {
   return new Command("verify")
@@ -23,7 +30,7 @@ export function makeVerifyCommand(): Command {
       } else {
         printHuman("valid", "false");
         for (const e of result.errors) {
-          printError(e);
+          printError(`block ${e.blockNumber}: ${e.message}`);
         }
       }
       if (!result.valid) process.exit(1);
