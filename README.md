@@ -38,6 +38,7 @@ glorychain verify --chain <id>
 | Package | Version | Description |
 |---|---|---|
 | [`@glorychain/core`](packages/core) | [![core][core_img]][core_url] | Protocol — chain lifecycle, crypto, verification |
+| [`@glorychain/structures`](packages/structures) | [![structures][structures_img]][structures_url] | Stateful structures — OrgTree, KeyValueStore, MemberSet |
 | [`@glorychain/fs`](packages/fs) | [![fs][fs_img]][fs_url] | Filesystem connector |
 | [`@glorychain/github`](packages/github) | [![gh][gh_img]][gh_url] | GitHub connector + tamper detection |
 | [`@glorychain/shared`](packages/shared) | [![shared][shared_img]][shared_url] | Zod validators + shared types |
@@ -75,3 +76,5 @@ glorychain is an open protocol built in public. All contributions welcome — co
 [shared_url]: https://www.npmjs.com/package/@glorychain/shared
 [cli_img]: https://img.shields.io/npm/v/glorychain?label=%20&style=flat-square
 [cli_url]: https://www.npmjs.com/package/glorychain
+[structures_img]: https://img.shields.io/npm/v/@glorychain/structures?label=%20&style=flat-square
+[structures_url]: https://www.npmjs.com/package/@glorychain/structures
