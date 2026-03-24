@@ -1,0 +1,37 @@
+{
+  "name": "@glorychain/s3",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "S3-compatible connector for glorychain — supports AWS S3, Cloudflare R2, MinIO, Backblaze B2",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@glorychain/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "@types/node": "^22.0.0",
+    "tsdown": "latest",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

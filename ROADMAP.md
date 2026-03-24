@@ -7,8 +7,9 @@ glorychain is an early-stage open protocol. This document is public and honest a
 ## What exists today
 
 - **Protocol core** — Ed25519 signing, SHA-256 hash chaining, full verification
-- **CLI** — 11 commands covering the full chain lifecycle
-- **Connectors** — filesystem (`@glorychain/fs`) and GitHub (`@glorychain/github`)
+- **CLI** — 11 commands covering the full chain lifecycle, with `--preset` scaffolding for common chain types
+- **Connectors** — filesystem (`@glorychain/fs`), GitHub (`@glorychain/github`), S3/R2/MinIO (`@glorychain/s3`), Postgres (`@glorychain/postgres`)
+- **Structures** — 9 ready-to-use stateful data structures in `@glorychain/structures`: OrgTree, KeyValueStore, MemberSet, VoteRegister, DecisionLog, Timeline, DocumentRegister, AccessList, ChangeLog
 - **Conformance suite** — protocol compliance testing
 - **Schema validation** — optional JSON Schema v7 enforcement on chain content
 - **Fork model** — key compromise and governance transition support
@@ -23,7 +24,7 @@ glorychain is an early-stage open protocol. This document is public and honest a
 - [ ] **Multi-signer chains** — require M-of-N signatures for appends (NGO boards, governance bodies)
 - [ ] **Chain indexing** — search and query across chains
 - [ ] **Web viewer** — a read-only browser UI for exploring and verifying chains publicly
-- [ ] **More connectors** — S3, IPFS, Arweave
+- [ ] **More connectors** — IPFS, Arweave
 
 ### Medium term
 

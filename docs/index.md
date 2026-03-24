@@ -23,6 +23,9 @@ If you're new, start with [why glorychain exists](why-glorychain.md). If you wan
 **I want to use glorychain programmatically**
 → [Programmatic API guide](guides/programmatic-api.md)
 
+**I want to embed glorychain in my existing application**
+→ [Embedding guide](guides/embedding-glorychain.md)
+
 **I want to maintain a data structure on a chain (org chart, config, membership)**
 → [Structures guide](guides/structures.md)
 
