@@ -165,11 +165,12 @@ Modify any block → every subsequent hash breaks. **Tampering is mathematically
 
 | Package | Version | Description |
 |---|---|---|
-| [`@glorychain/core`](packages/core) | [![core][core_img]][npm_url] | Protocol — chain lifecycle, crypto, verification |
-| [`@glorychain/fs`](packages/fs) | [![fs][fs_img]][npm_url] | Filesystem connector |
-| [`@glorychain/github`](packages/github) | [![gh][gh_img]][npm_url] | GitHub connector + tamper detection |
-| [`@glorychain/shared`](packages/shared) | [![shared][shared_img]][npm_url] | Zod validators + shared types |
-| [`glorychain` CLI](apps/cli) | [![cli][cli_img]][npm_url] | Full lifecycle management from the terminal |
+| [`@glorychain/core`](packages/core) | [![core][core_img]][core_url] | Protocol — chain lifecycle, crypto, verification |
+| [`@glorychain/structures`](packages/structures) | [![structures][structures_img]][structures_url] | Stateful structures — OrgTree, KeyValueStore, MemberSet |
+| [`@glorychain/fs`](packages/fs) | [![fs][fs_img]][fs_url] | Filesystem connector |
+| [`@glorychain/github`](packages/github) | [![gh][gh_img]][gh_url] | GitHub connector + tamper detection |
+| [`@glorychain/shared`](packages/shared) | [![shared][shared_img]][shared_url] | Zod validators + shared types |
+| [`glorychain` CLI](apps/cli) | [![cli][cli_img]][cli_url] | Full lifecycle management from the terminal |
 | [Conformance suite](apps/conformance) | — | Protocol compliance testing |
 
 ---
@@ -230,7 +231,14 @@ pnpm format      # auto-format
 [ts_img]: https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white
 [ts_url]: https://www.typescriptlang.org/
 [core_img]: https://img.shields.io/npm/v/@glorychain/core?label=%20&style=flat-square
+[core_url]: https://www.npmjs.com/package/@glorychain/core
 [fs_img]: https://img.shields.io/npm/v/@glorychain/fs?label=%20&style=flat-square
+[fs_url]: https://www.npmjs.com/package/@glorychain/fs
 [gh_img]: https://img.shields.io/npm/v/@glorychain/github?label=%20&style=flat-square
+[gh_url]: https://www.npmjs.com/package/@glorychain/github
 [shared_img]: https://img.shields.io/npm/v/@glorychain/shared?label=%20&style=flat-square
+[shared_url]: https://www.npmjs.com/package/@glorychain/shared
 [cli_img]: https://img.shields.io/npm/v/glorychain?label=%20&style=flat-square
+[cli_url]: https://www.npmjs.com/package/glorychain
+[structures_img]: https://img.shields.io/npm/v/@glorychain/structures?label=%20&style=flat-square
+[structures_url]: https://www.npmjs.com/package/@glorychain/structures
