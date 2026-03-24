@@ -39,7 +39,11 @@ describe("Timeline", () => {
   it("adds entries", () => {
     const chain = makeChain([
       Timeline.entry({ id: "e1", title: "Voted YES on SB-412", tags: ["climate", "vote"] }),
-      Timeline.entry({ id: "e2", title: "Committed to net-zero 2035", tags: ["climate", "commitment"] }),
+      Timeline.entry({
+        id: "e2",
+        title: "Committed to net-zero 2035",
+        tags: ["climate", "commitment"],
+      }),
     ]);
     const timeline = Timeline.fromChain(chain);
     expect(timeline.count).toBe(2);
@@ -53,8 +57,18 @@ describe("Timeline", () => {
       Timeline.entry({ id: "e3", title: "Vote C", tags: ["climate", "housing"] }),
     ]);
     const timeline = Timeline.fromChain(chain);
-    expect(timeline.byTag("climate").map((e) => e.id).sort()).toEqual(["e1", "e3"]);
-    expect(timeline.byTag("housing").map((e) => e.id).sort()).toEqual(["e2", "e3"]);
+    expect(
+      timeline
+        .byTag("climate")
+        .map((e) => e.id)
+        .sort(),
+    ).toEqual(["e1", "e3"]);
+    expect(
+      timeline
+        .byTag("housing")
+        .map((e) => e.id)
+        .sort(),
+    ).toEqual(["e2", "e3"]);
   });
 
   it("retracts entries", () => {

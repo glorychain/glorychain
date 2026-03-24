@@ -49,10 +49,15 @@ export { MemberSet } from "./member-set/index.js";
 
 export type { OrgEvent, OrgEventType, OrgMember, OrgTreeState } from "./org-tree/index.js";
 export { OrgTree } from "./org-tree/index.js";
-
-export type { TimelineEntry, TimelineEvent, TimelineEventType, TimelineState } from "./timeline/index.js";
+export type { Reducer } from "./shared/index.js";
+export { parseJson, replayChain, serialiseEvent } from "./shared/index.js";
+export type {
+  TimelineEntry,
+  TimelineEvent,
+  TimelineEventType,
+  TimelineState,
+} from "./timeline/index.js";
 export { Timeline } from "./timeline/index.js";
-
 export type {
   Motion,
   MotionStatus,
@@ -63,6 +68,3 @@ export type {
   VoteRegisterState,
 } from "./vote-register/index.js";
 export { VoteRegister } from "./vote-register/index.js";
-
-export type { Reducer } from "./shared/index.js";
-export { parseJson, replayChain, serialiseEvent } from "./shared/index.js";

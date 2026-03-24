@@ -30,11 +30,7 @@ export interface AnnotateEvent {
   note: string;
 }
 
-export type DecisionEvent =
-  | RecordEvent
-  | SupersedeEvent
-  | WithdrawDecisionEvent
-  | AnnotateEvent;
+export type DecisionEvent = RecordEvent | SupersedeEvent | WithdrawDecisionEvent | AnnotateEvent;
 
 export interface Decision {
   id: string;

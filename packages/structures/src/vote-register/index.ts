@@ -1,10 +1,10 @@
-export { VoteRegister } from "./VoteRegister.js";
 export type {
   Motion,
+  MotionStatus,
   MotionVotes,
   VoteChoice,
   VoteEvent,
   VoteEventType,
-  MotionStatus,
   VoteRegisterState,
 } from "./types.js";
+export { VoteRegister } from "./VoteRegister.js";

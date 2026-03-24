@@ -38,7 +38,11 @@ function makeChain(events: string[]): Chain {
 describe("DecisionLog", () => {
   it("records a decision", () => {
     const chain = makeChain([
-      DecisionLog.record({ id: "ADR-001", title: "Use RocksDB", body: "Chosen for column families." }),
+      DecisionLog.record({
+        id: "ADR-001",
+        title: "Use RocksDB",
+        body: "Chosen for column families.",
+      }),
     ]);
     const log = DecisionLog.fromChain(chain);
     expect(log.get("ADR-001")?.title).toBe("Use RocksDB");
@@ -47,8 +51,16 @@ describe("DecisionLog", () => {
 
   it("supersedes a decision", () => {
     const chain = makeChain([
-      DecisionLog.record({ id: "ADR-001", title: "Use RocksDB", body: "Chosen for column families." }),
-      DecisionLog.record({ id: "ADR-002", title: "Use custom LSM", body: "Licence incompatibility." }),
+      DecisionLog.record({
+        id: "ADR-001",
+        title: "Use RocksDB",
+        body: "Chosen for column families.",
+      }),
+      DecisionLog.record({
+        id: "ADR-002",
+        title: "Use custom LSM",
+        body: "Licence incompatibility.",
+      }),
       DecisionLog.supersede({ id: "ADR-001", supersededBy: "ADR-002" }),
     ]);
     const log = DecisionLog.fromChain(chain);
@@ -60,7 +72,11 @@ describe("DecisionLog", () => {
 
   it("withdraws a decision", () => {
     const chain = makeChain([
-      DecisionLog.record({ id: "ADR-001", title: "Use RocksDB", body: "Chosen for column families." }),
+      DecisionLog.record({
+        id: "ADR-001",
+        title: "Use RocksDB",
+        body: "Chosen for column families.",
+      }),
       DecisionLog.withdraw({ id: "ADR-001", reason: "Abandoned approach" }),
     ]);
     const log = DecisionLog.fromChain(chain);
@@ -70,7 +86,11 @@ describe("DecisionLog", () => {
 
   it("annotates a decision", () => {
     const chain = makeChain([
-      DecisionLog.record({ id: "ADR-001", title: "Use RocksDB", body: "Chosen for column families." }),
+      DecisionLog.record({
+        id: "ADR-001",
+        title: "Use RocksDB",
+        body: "Chosen for column families.",
+      }),
       DecisionLog.annotate({ id: "ADR-001", note: "Still valid as of Q2 2026." }),
     ]);
     const log = DecisionLog.fromChain(chain);

@@ -50,7 +50,11 @@ function voteReducer(
         abstain: motion.votes.abstain.filter((v) => v !== event.voterId),
       };
       votes[event.vote].push(event.voterId);
-      motions.set(event.motionId, { ...motion, votes, lastUpdatedAtBlock: blockNumber } as Motion & {
+      motions.set(event.motionId, {
+        ...motion,
+        votes,
+        lastUpdatedAtBlock: blockNumber,
+      } as Motion & {
         lastUpdatedAtBlock: number;
       });
       break;

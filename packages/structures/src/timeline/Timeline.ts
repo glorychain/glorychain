@@ -1,6 +1,12 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
-import type { EntryEvent, RetractEvent, TimelineEntry, TimelineEvent, TimelineState } from "./types.js";
+import type {
+  EntryEvent,
+  RetractEvent,
+  TimelineEntry,
+  TimelineEvent,
+  TimelineState,
+} from "./types.js";
 
 const EMPTY_STATE: TimelineState = { entries: new Map() };
 
