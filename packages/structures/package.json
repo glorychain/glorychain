@@ -1,10 +1,15 @@
 {
-  "name": "@glorychain/conformance",
+  "name": "@glorychain/structures",
   "version": "0.0.2",
   "type": "module",
-  "description": "Glory Chain conformance test CLI",
-  "bin": {
-    "glorychain-conformance": "./dist/index.mjs"
+  "description": "Stateful data structure utilities for glorychain — org trees, key-value stores, member sets",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
   },
   "files": [
     "dist"
@@ -16,8 +21,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@glorychain/core": "workspace:*",
-    "commander": "^14.0.0"
+    "@glorychain/core": "workspace:*"
   },
   "devDependencies": {
     "@biomejs/biome": "latest",
@@ -26,7 +30,7 @@
     "typescript": "^5.9.0",
     "vitest": "^4.1.0"
   },
-  "engines": {
-    "node": ">=20"
+  "publishConfig": {
+    "access": "public"
   }
 }
