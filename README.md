@@ -38,8 +38,10 @@ glorychain verify --chain <id>
 | Package | Version | Description |
 |---|---|---|
 | [`@glorychain/core`](packages/core) | [![core][core_img]][core_url] | Protocol — chain lifecycle, crypto, verification |
-| [`@glorychain/structures`](packages/structures) | [![structures][structures_img]][structures_url] | Stateful structures — OrgTree, KeyValueStore, MemberSet |
+| [`@glorychain/structures`](packages/structures) | [![structures][structures_img]][structures_url] | Stateful structures — OrgTree, KeyValueStore, VoteRegister, and more |
 | [`@glorychain/fs`](packages/fs) | [![fs][fs_img]][fs_url] | Filesystem connector |
+| [`@glorychain/s3`](packages/s3) | [![s3][s3_img]][s3_url] | S3 connector — AWS, Cloudflare R2, MinIO, Backblaze |
+| [`@glorychain/postgres`](packages/postgres) | [![pg][pg_img]][pg_url] | PostgreSQL connector — Postgres, Supabase, Neon |
 | [`@glorychain/github`](packages/github) | [![gh][gh_img]][gh_url] | GitHub connector + tamper detection |
 | [`@glorychain/shared`](packages/shared) | [![shared][shared_img]][shared_url] | Zod validators + shared types |
 | [`glorychain` CLI](apps/cli) | [![cli][cli_img]][cli_url] | Full lifecycle management from the terminal |
@@ -78,3 +80,7 @@ glorychain is an open protocol built in public. All contributions welcome — co
 [cli_url]: https://www.npmjs.com/package/glorychain
 [structures_img]: https://img.shields.io/npm/v/@glorychain/structures?label=%20&style=flat-square
 [structures_url]: https://www.npmjs.com/package/@glorychain/structures
+[s3_img]: https://img.shields.io/npm/v/@glorychain/s3?label=%20&style=flat-square
+[s3_url]: https://www.npmjs.com/package/@glorychain/s3
+[pg_img]: https://img.shields.io/npm/v/@glorychain/postgres?label=%20&style=flat-square
+[pg_url]: https://www.npmjs.com/package/@glorychain/postgres

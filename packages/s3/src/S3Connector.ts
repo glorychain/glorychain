@@ -14,12 +14,15 @@ export interface S3ConnectorConfig {
   bucket: string;
   /** Key prefix for chain objects. Default: "chains" */
   prefix?: string;
-  /** AWS region. Default: "us-east-1" */
+  /** AWS region. Use "auto" for Cloudflare R2. Default: "us-east-1" */
   region?: string;
-  /** Custom endpoint URL — for Cloudflare R2, MinIO, etc. */
+  /** Custom endpoint URL — required for R2, MinIO, Backblaze B2 */
   endpoint?: string;
   /** AWS credentials. Uses SDK credential chain if omitted. */
-  credentials?: { accessKeyId: string; secretAccessKey: string };
+  credentials?: {
+    accessKeyId: string;
+    secretAccessKey: string;
+  };
 }
 
 export class S3Connector implements Connector {
@@ -36,6 +39,7 @@ export class S3Connector implements Connector {
       region: config.region ?? "us-east-1",
       ...(config.endpoint ? { endpoint: config.endpoint } : {}),
       ...(config.credentials ? { credentials: config.credentials } : {}),
+      // Required for path-style URLs (MinIO, some R2 setups)
       forcePathStyle: config.endpoint !== undefined,
     });
   }
@@ -103,14 +107,17 @@ export class S3Connector implements Connector {
   }
 
   async migrate(chainId: string, target: Connector): Promise<void> {
-    const updated = migrateChain(await this.read(chainId), "s3", target.version);
+    const chain = await this.read(chainId);
+    const updated = migrateChain(chain, "s3", target.version);
     await target.write(updated);
   }
 
   async verify(chainId: string): Promise<VerificationResult> {
-    return verifyChain(await this.read(chainId));
+    const chain = await this.read(chainId);
+    return verifyChain(chain);
   }
 
+  // S3 connectors are not watchable — poll externally or use S3 event notifications
   watch(_chainId: string): AsyncIterable<ThreatEvent> {
     throw new Error(
       "S3Connector does not support watch(). Use S3 event notifications or poll verify() instead.",

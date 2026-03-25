@@ -96,6 +96,9 @@ export class PgConnector implements Connector {
       [chainId],
     );
 
+    // Re-assemble the Chain object from normalised rows
+    // Blocks contain only indexed fields — full block data is stored as-is in content
+    // For normalised schema, content field stores the full serialised block JSON
     const blocks = blocksResult.rows.map((row) => JSON.parse(row.content as string));
     return { blocks } as Chain;
   }

@@ -1,6 +1,6 @@
 # Writing a Connector
 
-A connector is a persistence backend for glorychain. The protocol ships with `@glorychain/fs` (filesystem) and `@glorychain/github` (GitHub repository). You can write your own for any storage target.
+A connector is a persistence backend for glorychain. The protocol ships with four connectors: `@glorychain/fs`, `@glorychain/github`, `@glorychain/s3`, and `@glorychain/postgres`. You can write your own for any storage target.
 
 ---
 
@@ -41,47 +41,113 @@ const ids = await connector.list()
 
 ---
 
-## Example: S3Connector (sketch)
+## Reference: S3Connector
+
+`@glorychain/s3` stores each chain as a JSON object at `{prefix}/{chainId}.json`. Works with AWS S3, Cloudflare R2, and MinIO.
+
+```bash
+npm install @glorychain/s3
+```
 
 ```ts
-import { GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3"
-import type { Chain } from "@glorychain/core"
+import { S3Connector } from "@glorychain/s3"
 
-export class S3Connector {
-  private client: S3Client
-  private bucket: string
+// AWS S3
+const connector = new S3Connector({
+  bucket: "my-chains",
+  region: "us-east-1",
+})
 
-  constructor(bucket: string, region = "us-east-1") {
-    this.client = new S3Client({ region })
-    this.bucket = bucket
-  }
+// Cloudflare R2 or MinIO (custom endpoint)
+const connector = new S3Connector({
+  bucket: "my-chains",
+  endpoint: "https://my-account.r2.cloudflarestorage.com",
+  credentials: { accessKeyId: "...", secretAccessKey: "..." },
+})
 
-  async read(chainId: string): Promise<Chain> {
-    const res = await this.client.send(
-      new GetObjectCommand({ Bucket: this.bucket, Key: `chains/${chainId}.json` }),
-    )
-    const body = await res.Body?.transformToString()
-    if (!body) throw new Error(`Chain not found: ${chainId}`)
-    return JSON.parse(body) as Chain
-  }
-
-  async write(chain: Chain): Promise<void> {
-    await this.client.send(
-      new PutObjectCommand({
-        Bucket: this.bucket,
-        Key: `chains/${chain.metadata.chainId}.json`,
-        Body: JSON.stringify(chain, null, 2),
-        ContentType: "application/json",
-      }),
-    )
-  }
-
-  async list(): Promise<string[]> {
-    // ListObjectsV2 implementation omitted for brevity
-    return []
-  }
-}
+await connector.write(chain)
+const chain = await connector.read(chainId)
+const ids = await connector.list()
+await connector.delete(chainId)
 ```
+
+Config options:
+
+| Option | Required | Default | Description |
+|---|---|---|---|
+| `bucket` | yes | — | S3 bucket name |
+| `prefix` | no | `"chains"` | Key prefix — chains stored at `{prefix}/{chainId}.json` |
+| `region` | no | `"us-east-1"` | AWS region |
+| `endpoint` | no | — | Custom endpoint URL (R2, MinIO) |
+| `credentials` | no | — | `{ accessKeyId, secretAccessKey }` — uses AWS SDK credential chain if omitted |
+
+---
+
+## Reference: PgConnector
+
+`@glorychain/postgres` stores chains in a Postgres database. Accepts an existing `pg.Pool` — zero extra connections when embedding in your app.
+
+```bash
+npm install @glorychain/postgres
+```
+
+```ts
+import { Pool } from "pg"
+import { PgConnector } from "@glorychain/postgres"
+
+// Pass your existing pool
+const connector = new PgConnector({ pool: existingPool })
+
+// Or use a connection string
+const connector = new PgConnector({ connectionString: process.env.DATABASE_URL })
+
+// Create tables (idempotent — safe to call on every startup)
+await connector.migrate()
+
+await connector.write(chain)
+const chain = await connector.read(chainId)
+const ids = await connector.list()
+await connector.delete(chainId)
+
+// Close the pool — only closes if PgConnector created it
+await connector.end()
+```
+
+Config options:
+
+| Option | Required | Default | Description |
+|---|---|---|---|
+| `connectionString` | no¹ | — | Postgres connection string |
+| `pool` | no¹ | — | Existing `pg.Pool` — takes precedence over `connectionString` |
+| `schema` | no | `"jsonb"` | Storage schema: `"jsonb"` (single table) or `"normalised"` (blocks table) |
+| `tablePrefix` | no | `"glorychain"` | Table name prefix — creates `{prefix}_chains` and (if normalised) `{prefix}_blocks` |
+
+¹ One of `connectionString` or `pool` is required.
+
+**JSONB schema** (default): stores the full chain JSON in a single `glorychain_chains` table. Simple and fast.
+
+**Normalised schema**: stores chain metadata in `glorychain_chains` and individual blocks in `glorychain_blocks`. Enables SQL queries directly on block content.
+
+---
+
+## Reference: GitHubConnector
+
+`@glorychain/github` stores chains as JSON files committed to a GitHub repository. Provides tamper detection using GitHub's commit history.
+
+```ts
+import { GitHubConnector } from "@glorychain/github"
+
+const connector = new GitHubConnector({
+  owner: "my-org",
+  repo: "my-chain-repo",
+  token: process.env.GITHUB_TOKEN,
+})
+
+await connector.write(chain)
+const chain = await connector.read(chainId)
+```
+
+See the [self-hosted chain guide](../guides/self-hosted-chain.md) for the full GitHub setup.
 
 ---
 

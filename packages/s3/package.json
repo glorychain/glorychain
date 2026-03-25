@@ -2,7 +2,7 @@
   "name": "@glorychain/s3",
   "version": "0.1.0",
   "type": "module",
-  "description": "glorychain S3/R2/MinIO connector",
+  "description": "S3-compatible connector for glorychain — supports AWS S3, Cloudflare R2, MinIO, Backblaze B2",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
