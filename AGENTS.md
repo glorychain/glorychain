@@ -25,7 +25,9 @@ packages/core        @glorychain/core       — protocol (createChain, appendBlo
 packages/shared      @glorychain/shared     — Zod validators + shared types
 packages/fs          @glorychain/fs         — filesystem connector
 packages/github      @glorychain/github     — GitHub connector + tamper detection
-packages/structures  @glorychain/structures — OrgTree, KeyValueStore, MemberSet
+packages/s3          @glorychain/s3         — S3/R2/MinIO connector
+packages/postgres    @glorychain/postgres   — Postgres connector (JSONB or normalised schema)
+packages/structures  @glorychain/structures — OrgTree, KeyValueStore, MemberSet, VoteRegister, DecisionLog, Timeline, DocumentRegister, AccessList, ChangeLog
 apps/cli             glorychain             — CLI (11 commands)
 apps/conformance                            — protocol compliance test suite
 ```
@@ -73,34 +75,58 @@ const chain = await connector.read(chainId)
 
 ## Structures API
 
+All 9 structures follow the same pattern: `Structure.fromChain(chain)` → state, static event builders → block content strings, `Structure.genesisSchema` → pass to `createChain` to enforce block structure.
+
 ```ts
-import { OrgTree, KeyValueStore, MemberSet } from "@glorychain/structures"
+import {
+  AccessList, ChangeLog, DecisionLog, DocumentRegister,
+  KeyValueStore, MemberSet, OrgTree, Timeline, VoteRegister,
+} from "@glorychain/structures"
 
 // OrgTree — org hierarchy
 const tree = OrgTree.fromChain(chain)
-tree.get(id)                  // OrgMember | undefined
-tree.directReports(id)        // OrgMember[]
-tree.subtree(id)              // recursive reports
-tree.pathTo(id)               // root → member path
-tree.headcount                // active count
-
-// Event builders → block content strings
-OrgTree.appoint({ id, name, role, reportsTo })
-OrgTree.depart({ id, reason?, handoverTo? })
-OrgTree.promote({ id, role, reportsTo? })
-OrgTree.transfer({ id, reportsTo })
-OrgTree.rename({ id, role })
-OrgTree.suspend({ id }) / OrgTree.reinstate({ id })
+tree.get(id) / tree.directReports(id) / tree.subtree(id) / tree.headcount
+OrgTree.appoint({ id, name, role, reportsTo }) / OrgTree.depart({ id }) / OrgTree.promote({ id, role })
 
 // KeyValueStore — config register
 const store = KeyValueStore.fromChain(chain)
-store.get(key) / store.has(key) / store.toObject()
-KeyValueStore.set({ key, value, metadata? }) / KeyValueStore.delete(key) / KeyValueStore.clear()
+store.get(key) / store.toObject()
+KeyValueStore.set({ key, value }) / KeyValueStore.delete(key) / KeyValueStore.clear()
 
 // MemberSet — membership list
 const set = MemberSet.fromChain(chain)
 set.active / set.current / set.byRole(role)
 MemberSet.join({ id, name, role? }) / MemberSet.leave({ id }) / MemberSet.roleChange({ id, role })
+
+// VoteRegister — motion and vote record
+const register = VoteRegister.fromChain(chain)
+register.tally(id) / register.open / register.passed / register.withdrawn
+VoteRegister.motion({ id, title, proposedBy }) / VoteRegister.cast({ motionId, voterId, vote }) / VoteRegister.close({ id, outcome })
+
+// DecisionLog — tamper-evident decision record
+const log = DecisionLog.fromChain(chain)
+log.active / log.superseded / log.lineage(id)
+DecisionLog.record({ id, title, body, decidedBy }) / DecisionLog.supersede({ id, supersedes, ... }) / DecisionLog.withdraw({ id })
+
+// Timeline — chronological event log
+const timeline = Timeline.fromChain(chain)
+timeline.active / timeline.byTag(tag) / timeline.tags
+Timeline.entry({ id, title, body, tags? }) / Timeline.retract({ id })
+
+// DocumentRegister — version-tracked document registry
+const docs = DocumentRegister.fromChain(chain)
+docs.current / docs.byHash(hash)
+DocumentRegister.publish({ id, title, hash, version }) / DocumentRegister.supersede({ id, supersedes, ... }) / DocumentRegister.withdraw({ id })
+
+// AccessList — permission register
+const access = AccessList.fromChain(chain)
+access.isGranted(id) / access.granted / access.stale()
+AccessList.grant({ id, resource, grantedBy, expiresAt? }) / AccessList.revoke({ id, revokedBy }) / AccessList.expire({ id })
+
+// ChangeLog — software release register
+const changelog = ChangeLog.fromChain(chain)
+changelog.latest / changelog.active / changelog.yanked / changelog.breaking
+ChangeLog.release({ version, notes, breaking? }) / ChangeLog.deprecate({ version }) / ChangeLog.yank({ version })
 
 // Pass genesisSchema to createChain to enforce block structure at the protocol level
 createChain({ ..., schema: OrgTree.genesisSchema }, privateKey)

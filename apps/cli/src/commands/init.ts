@@ -117,12 +117,149 @@ jobs:
           git push
 `;
 
+// ─── Preset definitions ──────────────────────────────────────────────────────
+
+const PRESETS = {
+  governance: {
+    purpose: "governance",
+    charter: [
+      "# Chain Charter — Governance",
+      "",
+      "This chain is a tamper-evident public record of all governance votes and decisions.",
+      "Every motion, vote, and outcome is cryptographically signed and independently verifiable.",
+      "",
+      "## Purpose",
+      "",
+      "Record all governance motions and their outcomes.",
+      "",
+      "## Signatories",
+      "",
+      "<!-- List the keypair holders authorised to append to this chain. -->",
+      "",
+      "## Rules",
+      "",
+      "- Every motion must be opened before votes are cast",
+      "- Motions are closed by an authorised signatory after the vote period ends",
+      "- No block may be removed or altered after signing",
+      "",
+      "## Structure",
+      "",
+      "This chain uses `VoteRegister` from `@glorychain/structures` to derive current state.",
+    ].join("\n"),
+    hint: "Use VoteRegister from @glorychain/structures to query votes and outcomes.",
+  },
+
+  "board-decisions": {
+    purpose: "board-decisions",
+    charter: [
+      "# Chain Charter — Board Decisions",
+      "",
+      "This chain is the binding decision register for this organisation.",
+      "All resolutions are signed at the point of passing and cannot be silently amended.",
+      "",
+      "## Purpose",
+      "",
+      "Permanent, tamper-evident record of all board resolutions.",
+      "",
+      "## Signatories",
+      "",
+      "<!-- List the keypair holders authorised to append to this chain. -->",
+      "",
+      "## Rules",
+      "",
+      "- Resolutions are appended immediately after passing",
+      "- Include vote count, date, and reference number in every block",
+      "- Amendments reference the original resolution block number",
+    ].join("\n"),
+    hint: "Use DecisionLog from @glorychain/structures to query resolutions and supersessions.",
+  },
+
+  "audit-log": {
+    purpose: "audit-log",
+    charter: [
+      "# Chain Charter — Audit Log",
+      "",
+      "This chain is a tamper-evident audit trail for all deployments and configuration changes.",
+      "Every block is appended by CI and independently verifiable.",
+      "",
+      "## Purpose",
+      "",
+      "Attribute every deploy, config change, and rollback to a specific actor and timestamp.",
+      "",
+      "## Signatories",
+      "",
+      "<!-- Typically a CI bot keypair. Rotate on staff changes. -->",
+      "",
+      "## Rules",
+      "",
+      "- All production changes are appended automatically by CI",
+      "- Human-triggered changes include the actor's ID",
+      "- Rollbacks reference the original change block number",
+    ].join("\n"),
+    hint: "Use KeyValueStore from @glorychain/structures to track current config state.",
+  },
+
+  "policy-register": {
+    purpose: "policy-register",
+    charter: [
+      "# Chain Charter — Policy Register",
+      "",
+      "This chain is the authoritative register of all active policies.",
+      "Every publication, supersession, and withdrawal is permanently recorded.",
+      "",
+      "## Purpose",
+      "",
+      "Maintain a tamper-evident history of all policy documents.",
+      "",
+      "## Signatories",
+      "",
+      "<!-- List the keypair holders authorised to append to this chain. -->",
+      "",
+      "## Rules",
+      "",
+      "- Include document hash and version in every PUBLISH block",
+      "- Superseded policies remain in the chain — never delete",
+      "- Withdrawals include a reason",
+    ].join("\n"),
+    hint: "Use DocumentRegister from @glorychain/structures to query current and superseded policies.",
+  },
+
+  "membership-register": {
+    purpose: "membership",
+    charter: [
+      "# Chain Charter — Membership Register",
+      "",
+      "This chain is the authoritative membership register for this organisation.",
+      "All joins, departures, and role changes are permanently recorded.",
+      "",
+      "## Purpose",
+      "",
+      "Tamper-evident record of all current and historical members.",
+      "",
+      "## Signatories",
+      "",
+      "<!-- List the keypair holders authorised to append to this chain. -->",
+      "",
+      "## Rules",
+      "",
+      "- All membership changes are appended at the point of decision",
+      "- Departed members remain in the chain — active: false",
+      "- Role changes include the authorising signatory",
+    ].join("\n"),
+    hint: "Use MemberSet from @glorychain/structures to query active members and roles.",
+  },
+} as const;
+
+type Preset = keyof typeof PRESETS;
+const PRESET_NAMES = Object.keys(PRESETS) as Preset[];
+
 export function makeInitCommand(): Command {
   return new Command("init")
     .description("Initialise a glorychain project in the current directory")
     .option("--dir <dir>", "Chain storage directory", "chains")
-    .option("--purpose <purpose>", "Chain purpose", "general")
+    .option("--purpose <purpose>", "Chain purpose (overridden by --preset)", "general")
     .option("--content <text>", "Genesis block content (required to create a genesis block)")
+    .option("--preset <preset>", `Scaffold a preset chain type: ${PRESET_NAMES.join(", ")}`)
     .option(
       "--key <privateKey>",
       "Ed25519 private key (base64url) — if omitted, a new keypair is generated",
@@ -138,12 +275,22 @@ export function makeInitCommand(): Command {
         dir: string;
         purpose: string;
         content?: string;
+        preset?: string;
         key?: string;
         pubkey?: string;
         github?: boolean;
         json?: boolean;
       }) => {
         if (opts.json) setJsonMode(true);
+
+        // Resolve preset
+        const preset = opts.preset !== undefined ? (opts.preset as Preset) : undefined;
+        if (preset !== undefined && !PRESET_NAMES.includes(preset)) {
+          printError(`Unknown preset "${preset}". Available: ${PRESET_NAMES.join(", ")}`);
+          process.exit(1);
+        }
+        const presetConfig = preset !== undefined ? PRESETS[preset] : undefined;
+        const resolvedPurpose = presetConfig?.purpose ?? opts.purpose;
 
         const chainsDir = resolve(opts.dir);
 
@@ -155,28 +302,33 @@ export function makeInitCommand(): Command {
         await writeConfig({ connector: "fs", chainIds: [] });
         if (!opts.json) printHuman("config", ".glorychain/config.json");
 
-        // Write CHAIN_CHARTER.md template if it doesn't exist
+        // Write CHAIN_CHARTER.md — preset content or generic template
         const charterPath = join(process.cwd(), "CHAIN_CHARTER.md");
+        const charterContent =
+          presetConfig?.charter ??
+          [
+            "# Chain Charter",
+            "",
+            "<!-- Describe the purpose and governance rules of this chain. -->",
+            "",
+            "## Purpose",
+            "",
+            "## Signatories",
+            "",
+            "## Governance rules",
+            "",
+          ].join("\n");
+
         try {
-          await writeFile(
-            charterPath,
-            [
-              "# Chain Charter",
-              "",
-              "<!-- Describe the purpose and governance rules of this chain. -->",
-              "",
-              "## Purpose",
-              "",
-              "## Signatories",
-              "",
-              "## Governance rules",
-              "",
-            ].join("\n"),
-            { flag: "wx" }, // fail if already exists
-          );
+          await writeFile(charterPath, charterContent, { flag: "wx" });
           if (!opts.json) printHuman("created", "CHAIN_CHARTER.md");
         } catch {
           // Already exists — skip silently
+        }
+
+        if (preset !== undefined && !opts.json) {
+          printHuman("preset", preset);
+          if (presetConfig?.hint) printHuman("structure", presetConfig.hint);
         }
 
         // Scaffold GitHub Actions workflows if --github flag set
@@ -226,7 +378,7 @@ export function makeInitCommand(): Command {
           const result = createChain(
             {
               content: opts.content,
-              purpose: opts.purpose,
+              purpose: resolvedPurpose,
               creatorId: "anonymous",
               identityType: "anonymous",
               publicKey,

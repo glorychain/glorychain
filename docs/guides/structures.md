@@ -297,6 +297,566 @@ interface Member {
 
 ---
 
+## VoteRegister
+
+A motion-and-vote record. Tracks governance motions through their full lifecycle: open, voted, closed, or withdrawn.
+
+Good for: DAO governance, board decisions, working group approvals, release gates.
+
+### Create a chain
+
+```ts
+import { VoteRegister } from "@glorychain/structures"
+
+const chain = createChain(
+  {
+    content: "Protocol governance vote register.",
+    purpose: "governance",
+    creatorId: "governance@protocol.org",
+    identityType: "anonymous",
+    publicKey,
+    schema: VoteRegister.genesisSchema,
+  },
+  privateKey,
+)
+```
+
+### Append events
+
+```ts
+// Open a motion
+await appendBlock(chain, { content: VoteRegister.motion({
+  id: "motion-001",
+  title: "Adopt protocol v0.2",
+  proposedBy: "alice@protocol.org",
+  metadata: { quorum: "3" },
+}), publicKey }, privateKey)
+
+// Cast votes
+await appendBlock(chain, { content: VoteRegister.cast({
+  motionId: "motion-001",
+  voterId: "alice@protocol.org",
+  vote: "yes",
+}), publicKey }, privateKey)
+
+await appendBlock(chain, { content: VoteRegister.cast({
+  motionId: "motion-001",
+  voterId: "bob@protocol.org",
+  vote: "no",
+}), publicKey }, privateKey)
+
+// Close the motion
+await appendBlock(chain, { content: VoteRegister.close({
+  id: "motion-001",
+  outcome: "passed",
+}), publicKey }, privateKey)
+
+// Withdraw an open motion
+await appendBlock(chain, { content: VoteRegister.withdraw({
+  id: "motion-002",
+  reason: "superseded by motion-003",
+}), publicKey }, privateKey)
+```
+
+### Query state
+
+```ts
+const register = VoteRegister.fromChain(chain)
+
+register.get("motion-001")           // Motion | undefined
+register.tally("motion-001")         // { yes: 1, no: 1, abstain: 0, total: 2 }
+register.voters("motion-001")        // string[] — voter IDs
+register.all                         // Motion[]
+register.open                        // Motion[] — status === "open"
+register.passed                      // Motion[] — outcome === "passed"
+register.failed                      // Motion[] — outcome === "failed"
+register.withdrawn                   // Motion[] — status === "withdrawn"
+```
+
+### Motion shape
+
+```ts
+interface Motion {
+  id: string
+  title: string
+  proposedBy: string
+  status: "open" | "closed" | "withdrawn"
+  outcome?: "passed" | "failed"
+  openedAtBlock: number
+  closedAtBlock?: number
+  metadata: Record<string, string>
+}
+```
+
+### All event types
+
+| Builder | Description |
+|---|---|
+| `VoteRegister.motion({ id, title, proposedBy, metadata? })` | Open a new motion |
+| `VoteRegister.cast({ motionId, voterId, vote })` | Cast a vote (`"yes"` \| `"no"` \| `"abstain"`) |
+| `VoteRegister.close({ id, outcome })` | Close a motion with outcome (`"passed"` \| `"failed"`) |
+| `VoteRegister.withdraw({ id, reason? })` | Withdraw an open motion |
+
+---
+
+## DecisionLog
+
+A tamper-evident record of decisions. Decisions can supersede earlier ones and be withdrawn — the full lineage is preserved.
+
+Good for: board resolutions, policy decisions, compliance records, change approvals.
+
+### Create a chain
+
+```ts
+import { DecisionLog } from "@glorychain/structures"
+
+const chain = createChain(
+  {
+    content: "Acme Corp board resolution register.",
+    purpose: "board-decisions",
+    creatorId: "board.secretary@acme.com",
+    identityType: "anonymous",
+    publicKey,
+    schema: DecisionLog.genesisSchema,
+  },
+  privateKey,
+)
+```
+
+### Append events
+
+```ts
+// Record a decision
+await appendBlock(chain, { content: DecisionLog.record({
+  id: "RES-2026-001",
+  title: "Approve Q1 budget",
+  body: "The board approves the Q1 2026 budget of $2.4M as presented.",
+  decidedBy: "board",
+  metadata: { vote: "5-0", reference: "BOD-2026-Q1" },
+}), publicKey }, privateKey)
+
+// Supersede with a new decision
+await appendBlock(chain, { content: DecisionLog.supersede({
+  id: "RES-2026-002",
+  title: "Approve revised Q1 budget",
+  body: "The board approves the revised Q1 2026 budget of $2.6M.",
+  decidedBy: "board",
+  supersedes: "RES-2026-001",
+}), publicKey }, privateKey)
+
+// Withdraw a decision
+await appendBlock(chain, { content: DecisionLog.withdraw({
+  id: "RES-2026-001",
+  reason: "Superseded by RES-2026-002",
+}), publicKey }, privateKey)
+
+// Annotate without changing status
+await appendBlock(chain, { content: DecisionLog.annotate({
+  id: "RES-2026-002",
+  note: "Implementation completed 2026-02-15",
+}), publicKey }, privateKey)
+```
+
+### Query state
+
+```ts
+const log = DecisionLog.fromChain(chain)
+
+log.get("RES-2026-001")              // Decision | undefined
+log.all                              // Decision[]
+log.active                           // Decision[] — not superseded or withdrawn
+log.superseded                       // Decision[]
+log.withdrawn                        // Decision[]
+log.lineage("RES-2026-002")          // Decision[] — chain of supersessions, oldest first
+```
+
+### Decision shape
+
+```ts
+interface Decision {
+  id: string
+  title: string
+  body: string
+  decidedBy: string
+  status: "active" | "superseded" | "withdrawn"
+  supersedes?: string
+  supersededBy?: string
+  annotations: string[]
+  recordedAtBlock: number
+  metadata: Record<string, string>
+}
+```
+
+### All event types
+
+| Builder | Description |
+|---|---|
+| `DecisionLog.record({ id, title, body, decidedBy, metadata? })` | Record a new decision |
+| `DecisionLog.supersede({ id, title, body, decidedBy, supersedes, metadata? })` | Record a decision that supersedes an earlier one |
+| `DecisionLog.withdraw({ id, reason? })` | Withdraw a decision |
+| `DecisionLog.annotate({ id, note })` | Add a note without changing status |
+
+---
+
+## Timeline
+
+A chronological event log. Entries have tags for filtering. Entries can be retracted (marked inactive) without being deleted.
+
+Good for: project milestones, incident timelines, changelog entries, audit narratives.
+
+### Create a chain
+
+```ts
+import { Timeline } from "@glorychain/structures"
+
+const chain = createChain(
+  {
+    content: "Project Athena milestone timeline.",
+    purpose: "timeline",
+    creatorId: "pm@company.com",
+    identityType: "anonymous",
+    publicKey,
+    schema: Timeline.genesisSchema,
+  },
+  privateKey,
+)
+```
+
+### Append events
+
+```ts
+// Add an entry
+await appendBlock(chain, { content: Timeline.entry({
+  id: "milestone-kickoff",
+  title: "Project kickoff",
+  body: "Initial planning complete. Team of 6 confirmed.",
+  tags: ["milestone", "planning"],
+  metadata: { owner: "alice@company.com" },
+}), publicKey }, privateKey)
+
+await appendBlock(chain, { content: Timeline.entry({
+  id: "incident-001",
+  title: "Production outage",
+  body: "Payments API unavailable 14:30–15:45 UTC. Root cause: misconfigured rate limiter.",
+  tags: ["incident", "production"],
+}), publicKey }, privateKey)
+
+// Retract an entry (mark as inactive, not deleted)
+await appendBlock(chain, { content: Timeline.retract({
+  id: "milestone-kickoff",
+  reason: "Duplicate — see milestone-kickoff-v2",
+}), publicKey }, privateKey)
+```
+
+### Query state
+
+```ts
+const timeline = Timeline.fromChain(chain)
+
+timeline.get("incident-001")          // TimelineEntry | undefined
+timeline.all                          // TimelineEntry[] — chronological
+timeline.active                       // TimelineEntry[] — not retracted
+timeline.retracted                    // TimelineEntry[]
+timeline.byTag("incident")            // TimelineEntry[] — filtered by tag
+timeline.tags                         // string[] — all distinct tags
+timeline.count                        // number — total entries
+```
+
+### TimelineEntry shape
+
+```ts
+interface TimelineEntry {
+  id: string
+  title: string
+  body: string
+  tags: string[]
+  active: boolean           // false after RETRACT
+  addedAtBlock: number
+  metadata: Record<string, string>
+}
+```
+
+### All event types
+
+| Builder | Description |
+|---|---|
+| `Timeline.entry({ id, title, body, tags?, metadata? })` | Add a timeline entry |
+| `Timeline.retract({ id, reason? })` | Retract an entry (marks inactive, not deleted) |
+
+---
+
+## DocumentRegister
+
+A version-tracked document registry. Documents can be published, superseded, withdrawn, and restored — full provenance chain preserved.
+
+Good for: policy libraries, compliance documents, contracts, published standards.
+
+### Create a chain
+
+```ts
+import { DocumentRegister } from "@glorychain/structures"
+
+const chain = createChain(
+  {
+    content: "Acme Corp policy document register.",
+    purpose: "policy-register",
+    creatorId: "compliance@acme.com",
+    identityType: "anonymous",
+    publicKey,
+    schema: DocumentRegister.genesisSchema,
+  },
+  privateKey,
+)
+```
+
+### Append events
+
+```ts
+// Publish a document
+await appendBlock(chain, { content: DocumentRegister.publish({
+  id: "POL-INFOSEC-001",
+  title: "Information Security Policy",
+  hash: "sha256:abc123...",
+  version: "1.0",
+  metadata: { owner: "ciso@acme.com", review_date: "2027-01-01" },
+}), publicKey }, privateKey)
+
+// Supersede with a new version
+await appendBlock(chain, { content: DocumentRegister.supersede({
+  id: "POL-INFOSEC-002",
+  title: "Information Security Policy",
+  hash: "sha256:def456...",
+  version: "2.0",
+  supersedes: "POL-INFOSEC-001",
+}), publicKey }, privateKey)
+
+// Withdraw
+await appendBlock(chain, { content: DocumentRegister.withdraw({
+  id: "POL-INFOSEC-001",
+  reason: "Superseded by version 2.0",
+}), publicKey }, privateKey)
+
+// Restore a withdrawn document
+await appendBlock(chain, { content: DocumentRegister.restore({
+  id: "POL-INFOSEC-001",
+  reason: "Reinstated pending review of v2.0",
+}), publicKey }, privateKey)
+```
+
+### Query state
+
+```ts
+const register = DocumentRegister.fromChain(chain)
+
+register.get("POL-INFOSEC-001")       // Document | undefined
+register.byHash("sha256:abc123...")   // Document | undefined — look up by content hash
+register.all                          // Document[]
+register.current                      // Document[] — status === "published"
+register.superseded                   // Document[]
+register.withdrawn                    // Document[]
+```
+
+### Document shape
+
+```ts
+interface Document {
+  id: string
+  title: string
+  hash: string
+  version: string
+  status: "published" | "superseded" | "withdrawn"
+  supersedes?: string
+  supersededBy?: string
+  publishedAtBlock: number
+  metadata: Record<string, string>
+}
+```
+
+### All event types
+
+| Builder | Description |
+|---|---|
+| `DocumentRegister.publish({ id, title, hash, version, metadata? })` | Publish a new document |
+| `DocumentRegister.supersede({ id, title, hash, version, supersedes, metadata? })` | Publish a new version that supersedes an existing one |
+| `DocumentRegister.withdraw({ id, reason? })` | Withdraw a document |
+| `DocumentRegister.restore({ id, reason? })` | Restore a withdrawn document |
+
+---
+
+## AccessList
+
+A permission register. Tracks grants, revocations, and time-limited access with expiry tracking.
+
+Good for: API key management, service account permissions, contractor access, feature flags.
+
+### Create a chain
+
+```ts
+import { AccessList } from "@glorychain/structures"
+
+const chain = createChain(
+  {
+    content: "Production API access register.",
+    purpose: "access-control",
+    creatorId: "platform-team@company.com",
+    identityType: "anonymous",
+    publicKey,
+    schema: AccessList.genesisSchema,
+  },
+  privateKey,
+)
+```
+
+### Append events
+
+```ts
+// Grant access
+await appendBlock(chain, { content: AccessList.grant({
+  id: "contractor-alice",
+  resource: "payments-api",
+  grantedBy: "platform-lead@company.com",
+  expiresAt: "2026-12-31T00:00:00Z",
+  metadata: { ticket: "SEC-1042", scope: "read-only" },
+}), publicKey }, privateKey)
+
+// Revoke access
+await appendBlock(chain, { content: AccessList.revoke({
+  id: "contractor-alice",
+  revokedBy: "platform-lead@company.com",
+  reason: "Contract ended",
+}), publicKey }, privateKey)
+
+// Mark as expired
+await appendBlock(chain, { content: AccessList.expire({
+  id: "contractor-bob",
+}), publicKey }, privateKey)
+```
+
+### Query state
+
+```ts
+const list = AccessList.fromChain(chain)
+
+list.get("contractor-alice")          // AccessEntry | undefined
+list.isGranted("contractor-alice")    // boolean — active and not expired
+list.granted                          // AccessEntry[] — status === "granted"
+list.revoked                          // AccessEntry[]
+list.all                              // AccessEntry[]
+list.stale()                          // AccessEntry[] — granted but past expiresAt (uses Date.now())
+list.stale("2026-06-01T00:00:00Z")    // AccessEntry[] — stale as of given timestamp
+```
+
+### AccessEntry shape
+
+```ts
+interface AccessEntry {
+  id: string
+  resource: string
+  grantedBy: string
+  status: "granted" | "revoked" | "expired"
+  expiresAt?: string
+  grantedAtBlock: number
+  metadata: Record<string, string>
+}
+```
+
+### All event types
+
+| Builder | Description |
+|---|---|
+| `AccessList.grant({ id, resource, grantedBy, expiresAt?, metadata? })` | Grant access |
+| `AccessList.revoke({ id, revokedBy, reason? })` | Revoke access |
+| `AccessList.expire({ id })` | Mark access as expired |
+
+---
+
+## ChangeLog
+
+A software release register. Tracks releases, deprecations, and yanked versions. Builds a tamper-evident history of what was shipped.
+
+Good for: package changelogs, API versioning, firmware release records, dependency audits.
+
+### Create a chain
+
+```ts
+import { ChangeLog } from "@glorychain/structures"
+
+const chain = createChain(
+  {
+    content: "payments-api release register.",
+    purpose: "changelog",
+    creatorId: "ci-bot@company.com",
+    identityType: "anonymous",
+    publicKey,
+    schema: ChangeLog.genesisSchema,
+  },
+  privateKey,
+)
+```
+
+### Append events
+
+```ts
+// Record a release
+await appendBlock(chain, { content: ChangeLog.release({
+  version: "1.2.0",
+  notes: "Add idempotency keys to payment intents. Fix retry logic on network errors.",
+  tags: ["feature", "bugfix"],
+  breaking: false,
+  metadata: { sha: "abc1234", deployed_by: "ci@company.com" },
+}), publicKey }, privateKey)
+
+// Deprecate a version
+await appendBlock(chain, { content: ChangeLog.deprecate({
+  version: "1.1.0",
+  reason: "Superseded by 1.2.0. End of support 2027-01-01.",
+}), publicKey }, privateKey)
+
+// Yank a version (emergency withdrawal)
+await appendBlock(chain, { content: ChangeLog.yank({
+  version: "1.2.1",
+  reason: "Critical data loss bug. Do not use. Patch in 1.2.2.",
+}), publicKey }, privateKey)
+```
+
+### Query state
+
+```ts
+const log = ChangeLog.fromChain(chain)
+
+log.get("1.2.0")                      // Release | undefined
+log.all                               // Release[] — chronological
+log.active                            // Release[] — not deprecated or yanked
+log.deprecated                        // Release[]
+log.yanked                            // Release[]
+log.breaking                          // Release[] — breaking: true
+log.latest                            // Release | undefined — most recent active release
+```
+
+### Release shape
+
+```ts
+interface Release {
+  version: string
+  notes: string
+  tags: string[]
+  breaking: boolean
+  status: "active" | "deprecated" | "yanked"
+  releasedAtBlock: number
+  metadata: Record<string, string>
+}
+```
+
+### All event types
+
+| Builder | Description |
+|---|---|
+| `ChangeLog.release({ version, notes, tags?, breaking?, metadata? })` | Record a release |
+| `ChangeLog.deprecate({ version, reason? })` | Mark a version as deprecated |
+| `ChangeLog.yank({ version, reason? })` | Emergency withdrawal of a version |
+
+---
+
 ## Building your own structure
 
 Any structure can be built with the shared `replayChain` utility:

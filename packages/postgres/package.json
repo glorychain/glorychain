@@ -1,10 +1,15 @@
 {
-  "name": "@glorychain/cli",
-  "version": "0.1.0",
+  "name": "@glorychain/postgres",
+  "version": "0.0.1",
   "type": "module",
-  "description": "Glory Chain CLI",
-  "bin": {
-    "glorychain": "./dist/index.mjs"
+  "description": "PostgreSQL connector for glorychain — supports Postgres, Supabase, Neon, Railway",
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.mts"
+    }
   },
   "files": [
     "dist"
@@ -17,18 +22,17 @@
   },
   "dependencies": {
     "@glorychain/core": "workspace:*",
-    "@glorychain/fs": "workspace:*",
-    "@glorychain/github": "workspace:*",
-    "commander": "^14.0.0"
+    "pg": "^8.11.0"
   },
   "devDependencies": {
     "@biomejs/biome": "latest",
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
     "tsdown": "latest",
     "typescript": "^5.9.0",
     "vitest": "^4.1.0"
   },
-  "engines": {
-    "node": ">=20"
+  "publishConfig": {
+    "access": "public"
   }
 }

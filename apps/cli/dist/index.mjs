@@ -25,7 +25,7 @@ const c = {
 	gray: isTTY ? "\x1B[90m" : ""
 };
 function printJson(data) {
-	process.stdout.write(JSON.stringify(data, null, 2) + "\n");
+	process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
 }
 /** Key: value line, e.g. "  chainId  abc123" */
 function printHuman(label, value) {
@@ -204,8 +204,8 @@ jobs:
         run: |
           mkdir -p chains
           glorychain create \\
-            --key "\$CHAIN_PRIVATE_KEY" \\
-            --pubkey "\$CHAIN_PUBLIC_KEY" \\
+            --key "$CHAIN_PRIVATE_KEY" \\
+            --pubkey "$CHAIN_PUBLIC_KEY" \\
             --content "$(cat CHAIN_CHARTER.md)" \\
             --purpose "github-audit-log" \\
             --dir chains
@@ -256,8 +256,8 @@ jobs:
         run: |
           glorychain append \\
             --chain "\${{ steps.check.outputs.chain_id }}" \\
-            --key "\$CHAIN_PRIVATE_KEY" \\
-            --pubkey "\$CHAIN_PUBLIC_KEY" \\
+            --key "$CHAIN_PRIVATE_KEY" \\
+            --pubkey "$CHAIN_PUBLIC_KEY" \\
             --content "MERGE: \${{ github.event.head_commit.message }} — \${{ github.sha }}" \\
             --dir chains
 
@@ -270,9 +270,143 @@ jobs:
           git commit -m "chore: append block [\${{ github.sha }}]"
           git push
 `;
+const PRESETS = {
+	governance: {
+		purpose: "governance",
+		charter: [
+			"# Chain Charter — Governance",
+			"",
+			"This chain is a tamper-evident public record of all governance votes and decisions.",
+			"Every motion, vote, and outcome is cryptographically signed and independently verifiable.",
+			"",
+			"## Purpose",
+			"",
+			"Record all governance motions and their outcomes.",
+			"",
+			"## Signatories",
+			"",
+			"<!-- List the keypair holders authorised to append to this chain. -->",
+			"",
+			"## Rules",
+			"",
+			"- Every motion must be opened before votes are cast",
+			"- Motions are closed by an authorised signatory after the vote period ends",
+			"- No block may be removed or altered after signing",
+			"",
+			"## Structure",
+			"",
+			"This chain uses `VoteRegister` from `@glorychain/structures` to derive current state."
+		].join("\n"),
+		hint: "Use VoteRegister from @glorychain/structures to query votes and outcomes."
+	},
+	"board-decisions": {
+		purpose: "board-decisions",
+		charter: [
+			"# Chain Charter — Board Decisions",
+			"",
+			"This chain is the binding decision register for this organisation.",
+			"All resolutions are signed at the point of passing and cannot be silently amended.",
+			"",
+			"## Purpose",
+			"",
+			"Permanent, tamper-evident record of all board resolutions.",
+			"",
+			"## Signatories",
+			"",
+			"<!-- List the keypair holders authorised to append to this chain. -->",
+			"",
+			"## Rules",
+			"",
+			"- Resolutions are appended immediately after passing",
+			"- Include vote count, date, and reference number in every block",
+			"- Amendments reference the original resolution block number"
+		].join("\n"),
+		hint: "Use DecisionLog from @glorychain/structures to query resolutions and supersessions."
+	},
+	"audit-log": {
+		purpose: "audit-log",
+		charter: [
+			"# Chain Charter — Audit Log",
+			"",
+			"This chain is a tamper-evident audit trail for all deployments and configuration changes.",
+			"Every block is appended by CI and independently verifiable.",
+			"",
+			"## Purpose",
+			"",
+			"Attribute every deploy, config change, and rollback to a specific actor and timestamp.",
+			"",
+			"## Signatories",
+			"",
+			"<!-- Typically a CI bot keypair. Rotate on staff changes. -->",
+			"",
+			"## Rules",
+			"",
+			"- All production changes are appended automatically by CI",
+			"- Human-triggered changes include the actor's ID",
+			"- Rollbacks reference the original change block number"
+		].join("\n"),
+		hint: "Use KeyValueStore from @glorychain/structures to track current config state."
+	},
+	"policy-register": {
+		purpose: "policy-register",
+		charter: [
+			"# Chain Charter — Policy Register",
+			"",
+			"This chain is the authoritative register of all active policies.",
+			"Every publication, supersession, and withdrawal is permanently recorded.",
+			"",
+			"## Purpose",
+			"",
+			"Maintain a tamper-evident history of all policy documents.",
+			"",
+			"## Signatories",
+			"",
+			"<!-- List the keypair holders authorised to append to this chain. -->",
+			"",
+			"## Rules",
+			"",
+			"- Include document hash and version in every PUBLISH block",
+			"- Superseded policies remain in the chain — never delete",
+			"- Withdrawals include a reason"
+		].join("\n"),
+		hint: "Use DocumentRegister from @glorychain/structures to query current and superseded policies."
+	},
+	"membership-register": {
+		purpose: "membership",
+		charter: [
+			"# Chain Charter — Membership Register",
+			"",
+			"This chain is the authoritative membership register for this organisation.",
+			"All joins, departures, and role changes are permanently recorded.",
+			"",
+			"## Purpose",
+			"",
+			"Tamper-evident record of all current and historical members.",
+			"",
+			"## Signatories",
+			"",
+			"<!-- List the keypair holders authorised to append to this chain. -->",
+			"",
+			"## Rules",
+			"",
+			"- All membership changes are appended at the point of decision",
+			"- Departed members remain in the chain — active: false",
+			"- Role changes include the authorising signatory"
+		].join("\n"),
+		hint: "Use MemberSet from @glorychain/structures to query active members and roles."
+	}
+};
+const PRESET_NAMES = Object.keys(PRESETS);
 function makeInitCommand() {
-	return new Command("init").description("Initialise a glorychain project in the current directory").option("--dir <dir>", "Chain storage directory", "chains").option("--purpose <purpose>", "Chain purpose", "general").option("--content <text>", "Genesis block content (required to create a genesis block)").option("--key <privateKey>", "Ed25519 private key (base64url) — if omitted, a new keypair is generated").option("--pubkey <publicKey>", "Ed25519 public key (base64url) — required if --key is provided").option("--github", "Scaffold GitHub Actions workflows for automated chain management").option("--json", "Output as JSON").action(async (opts) => {
+	return new Command("init").description("Initialise a glorychain project in the current directory").option("--dir <dir>", "Chain storage directory", "chains").option("--purpose <purpose>", "Chain purpose (overridden by --preset)", "general").option("--content <text>", "Genesis block content (required to create a genesis block)").option("--preset <preset>", `Scaffold a preset chain type: ${PRESET_NAMES.join(", ")}`).option("--key <privateKey>", "Ed25519 private key (base64url) — if omitted, a new keypair is generated").option("--pubkey <publicKey>", "Ed25519 public key (base64url) — required if --key is provided").option("--github", "Scaffold GitHub Actions workflows for automated chain management").option("--json", "Output as JSON").action(async (opts) => {
 		if (opts.json) setJsonMode(true);
+		const preset = opts.preset !== void 0 ? opts.preset : void 0;
+		if (preset !== void 0 && !PRESET_NAMES.includes(preset)) {
+			printError(`Unknown preset "${preset}". Available: ${PRESET_NAMES.join(", ")}`);
+			process.exit(1);
+		}
+		const presetConfig = preset !== void 0 ? PRESETS[preset] : void 0;
+		const resolvedPurpose = presetConfig?.purpose ?? opts.purpose;
 		const chainsDir = resolve(opts.dir);
 		await mkdir(chainsDir, { recursive: true });
 		if (!opts.json) printHuman("chains dir", opts.dir);
@@ -282,21 +416,26 @@ function makeInitCommand() {
 		});
 		if (!opts.json) printHuman("config", ".glorychain/config.json");
 		const charterPath = join(process.cwd(), "CHAIN_CHARTER.md");
+		const charterContent = presetConfig?.charter ?? [
+			"# Chain Charter",
+			"",
+			"<!-- Describe the purpose and governance rules of this chain. -->",
+			"",
+			"## Purpose",
+			"",
+			"## Signatories",
+			"",
+			"## Governance rules",
+			""
+		].join("\n");
 		try {
-			await writeFile(charterPath, [
-				"# Chain Charter",
-				"",
-				"<!-- Describe the purpose and governance rules of this chain. -->",
-				"",
-				"## Purpose",
-				"",
-				"## Signatories",
-				"",
-				"## Governance rules",
-				""
-			].join("\n"), { flag: "wx" });
+			await writeFile(charterPath, charterContent, { flag: "wx" });
 			if (!opts.json) printHuman("created", "CHAIN_CHARTER.md");
 		} catch {}
+		if (preset !== void 0 && !opts.json) {
+			printHuman("preset", preset);
+			if (presetConfig?.hint) printHuman("structure", presetConfig.hint);
+		}
 		if (opts.github) {
 			const workflowsDir = join(process.cwd(), ".github", "workflows");
 			await mkdir(workflowsDir, { recursive: true });
@@ -333,7 +472,7 @@ function makeInitCommand() {
 			}
 			const result = createChain({
 				content: opts.content,
-				purpose: opts.purpose,
+				purpose: resolvedPurpose,
 				creatorId: "anonymous",
 				identityType: "anonymous",
 				publicKey
@@ -503,7 +642,7 @@ function makeVerifyCommand() {
 			printHuman("valid", "true");
 		} else {
 			printHuman("valid", "false");
-			for (const e of result.errors) printError(e);
+			for (const e of result.errors) printError(`block ${e.blockNumber}: ${e.message}`);
 		}
 		if (!result.valid) process.exit(1);
 	});

@@ -95,13 +95,23 @@ glorychain inspect --chain <chainId> [--dir ./chains] [--json]
 Initialise a directory for use with glorychain.
 
 ```bash
-glorychain init [--dir chains] [--github] [--content "Genesis content"] [--key <key>] [--pubkey <pubkey>]
+glorychain init [--dir chains] [--preset <preset>] [--github] [--content "Genesis content"] [--key <key>] [--pubkey <pubkey>]
 ```
 
 Creates:
 - `chains/` directory
 - `.glorychain/config.json`
 - `CHAIN_CHARTER.md` template
+
+With `--preset`: populates `CHAIN_CHARTER.md` with a ready-to-use charter for a specific chain type. Also sets `--purpose` automatically.
+
+| Preset | Purpose | Suggested structure |
+|---|---|---|
+| `governance` | `governance` | `VoteRegister` |
+| `board-decisions` | `board-decisions` | `DecisionLog` |
+| `audit-log` | `audit-log` | `KeyValueStore` |
+| `policy-register` | `policy-register` | `DocumentRegister` |
+| `membership-register` | `membership` | `MemberSet` |
 
 With `--github`: also scaffolds `.github/workflows/chain-genesis.yml` and `chain-append.yml` for automated chain management. Requires `CHAIN_PRIVATE_KEY` and `CHAIN_PUBLIC_KEY` repo secrets.
 
