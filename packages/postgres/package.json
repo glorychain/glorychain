@@ -1,8 +1,8 @@
 {
-  "name": "@glorychain/github",
-  "version": "0.0.2",
+  "name": "@glorychain/postgres",
+  "version": "0.1.0",
   "type": "module",
-  "description": "Glory Chain GitHub connector",
+  "description": "glorychain Postgres connector",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
@@ -21,11 +21,13 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@glorychain/core": "workspace:*"
+    "@glorychain/core": "workspace:*",
+    "pg": "^8.11.0"
   },
   "devDependencies": {
     "@biomejs/biome": "latest",
     "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
     "tsdown": "latest",
     "typescript": "^5.9.0",
     "vitest": "^4.1.0"

@@ -1,8 +1,8 @@
 {
-  "name": "@glorychain/github",
-  "version": "0.0.2",
+  "name": "@glorychain/s3",
+  "version": "0.1.0",
   "type": "module",
-  "description": "Glory Chain GitHub connector",
+  "description": "glorychain S3/R2/MinIO connector",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.mts",
   "exports": {
@@ -21,6 +21,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.0.0",
     "@glorychain/core": "workspace:*"
   },
   "devDependencies": {

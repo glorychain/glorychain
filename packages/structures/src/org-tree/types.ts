@@ -80,4 +80,6 @@ export interface OrgMember {
 
 export interface OrgTreeState {
   members: Map<string, OrgMember>;
+  /** Reverse index: managerId → Set of active direct report IDs. */
+  reportIndex: Map<string | null, Set<string>>;
 }

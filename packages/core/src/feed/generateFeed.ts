@@ -26,18 +26,17 @@ export function generateFeed(chain: Chain, options?: FeedOptions): string {
       ? `  <link rel="self" href="${escapeXml(options.selfUrl)}"/>\n`
       : "";
 
-  const entries = [...blocks]
-    .reverse()
-    .map(
-      (block) => `  <entry>
+  const entries: string[] = [];
+  for (let i = blocks.length - 1; i >= 0; i--) {
+    const block = blocks[i]!;
+    entries.push(`  <entry>
     <id>urn:glorychain:${metadata.chainId}:block:${block.blockNumber}</id>
     <title>Block ${block.blockNumber}</title>
     <updated>${block.timestamp}</updated>
     <content type="text">${escapeXml(block.content)}</content>
     <glorychain:hash xmlns:glorychain="https://glorychain.dev/ns">${block.hash}</glorychain:hash>
-  </entry>`,
-    )
-    .join("\n");
+  </entry>`);
+  }
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
@@ -46,6 +45,6 @@ export function generateFeed(chain: Chain, options?: FeedOptions): string {
   <updated>${updated}</updated>
   <author><name>${escapeXml(genesis.creatorId)}</name></author>
 ${selfLink}  <generator>glorychain ${PROTOCOL_VERSION}</generator>
-${entries}
+${entries.join("\n")}
 </feed>`;
 }
