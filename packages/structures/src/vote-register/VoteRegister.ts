@@ -169,7 +169,11 @@ export class VoteRegister {
     for (const [id, m] of this.state.motions) {
       motions.set(id, {
         ...m,
-        votes: { yes: new Set(m.votes.yes), no: new Set(m.votes.no), abstain: new Set(m.votes.abstain) },
+        votes: {
+          yes: new Set(m.votes.yes),
+          no: new Set(m.votes.no),
+          abstain: new Set(m.votes.abstain),
+        },
       });
     }
     return { motions };

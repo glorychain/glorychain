@@ -92,7 +92,9 @@ export class OrgTree {
     const stack = this.directReports(id);
     let i = 0;
     while (i < stack.length) {
-      const member = stack[i++]!;
+      const member = stack[i];
+      i++;
+      if (!member) continue;
       result.push(member);
       const reports = this.directReports(member.id);
       for (const r of reports) stack.push(r);
@@ -146,9 +148,7 @@ export class OrgTree {
   get snapshot(): OrgTreeState {
     return {
       members: new Map(this.state.members),
-      reportIndex: new Map(
-        [...this.state.reportIndex.entries()].map(([k, v]) => [k, new Set(v)]),
-      ),
+      reportIndex: new Map([...this.state.reportIndex.entries()].map(([k, v]) => [k, new Set(v)])),
     };
   }
 

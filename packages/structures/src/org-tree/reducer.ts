@@ -4,13 +4,15 @@ import type { OrgEvent, OrgTreeState } from "./types.js";
 function cloneState(state: OrgTreeState): OrgTreeState {
   return {
     members: new Map(state.members),
-    reportIndex: new Map(
-      [...state.reportIndex.entries()].map(([k, v]) => [k, new Set(v)]),
-    ),
+    reportIndex: new Map([...state.reportIndex.entries()].map(([k, v]) => [k, new Set(v)])),
   };
 }
 
-function indexAdd(index: Map<string | null, Set<string>>, managerId: string | null, id: string): void {
+function indexAdd(
+  index: Map<string | null, Set<string>>,
+  managerId: string | null,
+  id: string,
+): void {
   let set = index.get(managerId);
   if (!set) {
     set = new Set();
