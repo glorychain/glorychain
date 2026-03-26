@@ -347,13 +347,13 @@ await appendBlock(chain, { content: VoteRegister.cast({
 
 // Close the motion
 await appendBlock(chain, { content: VoteRegister.close({
-  id: "motion-001",
+  motionId: "motion-001",
   outcome: "passed",
 }), publicKey }, privateKey)
 
 // Withdraw an open motion
 await appendBlock(chain, { content: VoteRegister.withdraw({
-  id: "motion-002",
+  motionId: "motion-002",
   reason: "superseded by motion-003",
 }), publicKey }, privateKey)
 ```
@@ -368,8 +368,8 @@ register.tally("motion-001")         // { yes: 1, no: 1, abstain: 0, total: 2 }
 register.voters("motion-001")        // string[] — voter IDs
 register.all                         // Motion[]
 register.open                        // Motion[] — status === "open"
-register.passed                      // Motion[] — outcome === "passed"
-register.failed                      // Motion[] — outcome === "failed"
+register.passed                      // Motion[] — status === "passed"
+register.failed                      // Motion[] — status === "failed"
 register.withdrawn                   // Motion[] — status === "withdrawn"
 ```
 
@@ -379,11 +379,12 @@ register.withdrawn                   // Motion[] — status === "withdrawn"
 interface Motion {
   id: string
   title: string
-  proposedBy: string
-  status: "open" | "closed" | "withdrawn"
-  outcome?: "passed" | "failed"
+  proposedBy: string | null
+  status: "open" | "passed" | "failed" | "withdrawn"
+  votes: { yes: Set<string>; no: Set<string>; abstain: Set<string> }
   openedAtBlock: number
-  closedAtBlock?: number
+  closedAtBlock: number | null
+  notes: string | null
   metadata: Record<string, string>
 }
 ```
@@ -394,8 +395,8 @@ interface Motion {
 |---|---|
 | `VoteRegister.motion({ id, title, proposedBy, metadata? })` | Open a new motion |
 | `VoteRegister.cast({ motionId, voterId, vote })` | Cast a vote (`"yes"` \| `"no"` \| `"abstain"`) |
-| `VoteRegister.close({ id, outcome })` | Close a motion with outcome (`"passed"` \| `"failed"`) |
-| `VoteRegister.withdraw({ id, reason? })` | Withdraw an open motion |
+| `VoteRegister.close({ motionId, outcome })` | Close a motion with outcome (`"passed"` \| `"failed"`) |
+| `VoteRegister.withdraw({ motionId, reason? })` | Withdraw an open motion |
 
 ---
 
@@ -713,10 +714,10 @@ const chain = createChain(
 // Grant access
 await appendBlock(chain, { content: AccessList.grant({
   id: "contractor-alice",
-  resource: "payments-api",
+  label: "payments-api (read-only)",
   grantedBy: "platform-lead@company.com",
   expiresAt: "2026-12-31T00:00:00Z",
-  metadata: { ticket: "SEC-1042", scope: "read-only" },
+  metadata: { ticket: "SEC-1042" },
 }), publicKey }, privateKey)
 
 // Revoke access
@@ -743,7 +744,7 @@ list.granted                          // AccessEntry[] — status === "granted"
 list.revoked                          // AccessEntry[]
 list.all                              // AccessEntry[]
 list.stale()                          // AccessEntry[] — granted but past expiresAt (uses Date.now())
-list.stale("2026-06-01T00:00:00Z")    // AccessEntry[] — stale as of given timestamp
+list.stale(new Date("2026-06-01"))    // AccessEntry[] — granted but past expiresAt as of given date
 ```
 
 ### AccessEntry shape
@@ -751,11 +752,12 @@ list.stale("2026-06-01T00:00:00Z")    // AccessEntry[] — stale as of given tim
 ```ts
 interface AccessEntry {
   id: string
-  resource: string
-  grantedBy: string
-  status: "granted" | "revoked" | "expired"
-  expiresAt?: string
+  label: string | null
+  granted: boolean           // false after REVOKE or EXPIRE
+  grantedBy: string | null
+  expiresAt: string | null
   grantedAtBlock: number
+  lastUpdatedAtBlock: number
   metadata: Record<string, string>
 }
 ```
@@ -764,7 +766,7 @@ interface AccessEntry {
 
 | Builder | Description |
 |---|---|
-| `AccessList.grant({ id, resource, grantedBy, expiresAt?, metadata? })` | Grant access |
+| `AccessList.grant({ id, label?, grantedBy, expiresAt?, metadata? })` | Grant access |
 | `AccessList.revoke({ id, revokedBy, reason? })` | Revoke access |
 | `AccessList.expire({ id })` | Mark access as expired |
 
@@ -889,4 +891,4 @@ function fromChain(chain: Chain): MyState {
 }
 ```
 
-See [Reducer API](../reference/connector-api.md) for full type signatures.
+See [Programmatic API](./programmatic-api.md) and the `@glorychain/structures` source for full type signatures.
