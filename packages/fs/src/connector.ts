@@ -1,5 +1,4 @@
-import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Chain, Connector, ISO8601, ThreatEvent, VerificationResult } from "@glorychain/core";
 import { migrateChain, verifyChain } from "@glorychain/core";
@@ -46,16 +45,15 @@ export class FsConnector implements Connector {
 
   async *watch(chainId: string): AsyncIterable<ThreatEvent> {
     const filePath = join(this.dir, `${chainId}.json`);
-    let lastHash: string | null = null;
+    let lastMtimeMs: number | null = null;
 
     while (true) {
       try {
-        const contents = await readFile(filePath, "utf8");
-        const currentHash = createHash("sha256").update(contents).digest("hex");
-        if (lastHash === null) {
-          lastHash = currentHash;
-        } else if (currentHash !== lastHash) {
-          lastHash = currentHash;
+        const { mtimeMs } = await stat(filePath);
+        if (lastMtimeMs === null) {
+          lastMtimeMs = mtimeMs;
+        } else if (mtimeMs !== lastMtimeMs) {
+          lastMtimeMs = mtimeMs;
           yield {
             type: "FILE_MODIFIED",
             chainId,
@@ -71,7 +69,7 @@ export class FsConnector implements Connector {
             timestamp: new Date().toISOString() as ISO8601,
             detail: `Chain file not found: ${filePath}`,
           };
-          lastHash = null;
+          lastMtimeMs = null;
         } else {
           yield {
             type: "UNEXPECTED_ERROR",

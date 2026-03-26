@@ -33,7 +33,7 @@ function voteReducer(
         title: event.title,
         proposedBy: event.proposedBy ?? null,
         status: "open",
-        votes: { yes: [], no: [], abstain: [] },
+        votes: { yes: new Set(), no: new Set(), abstain: new Set() },
         openedAtBlock: blockNumber,
         closedAtBlock: null,
         notes: null,
@@ -44,12 +44,16 @@ function voteReducer(
     case "CAST": {
       const motion = motions.get(event.motionId);
       if (!motion || motion.status !== "open") break;
+      // Remove previous vote (O(1) with Set), then add new vote
       const votes = {
-        yes: motion.votes.yes.filter((v) => v !== event.voterId),
-        no: motion.votes.no.filter((v) => v !== event.voterId),
-        abstain: motion.votes.abstain.filter((v) => v !== event.voterId),
+        yes: new Set(motion.votes.yes),
+        no: new Set(motion.votes.no),
+        abstain: new Set(motion.votes.abstain),
       };
-      votes[event.vote].push(event.voterId);
+      votes.yes.delete(event.voterId);
+      votes.no.delete(event.voterId);
+      votes.abstain.delete(event.voterId);
+      votes[event.vote].add(event.voterId);
       motions.set(event.motionId, {
         ...motion,
         votes,
@@ -64,7 +68,7 @@ function voteReducer(
       const motion = motions.get(event.motionId);
       if (!motion || motion.status !== "open") break;
       const outcome =
-        event.outcome ?? (motion.votes.yes.length > motion.votes.no.length ? "passed" : "failed");
+        event.outcome ?? (motion.votes.yes.size > motion.votes.no.size ? "passed" : "failed");
       motions.set(event.motionId, {
         ...motion,
         status: outcome,
@@ -148,9 +152,9 @@ export class VoteRegister {
   tally(id: string): { yes: number; no: number; abstain: number; total: number } | undefined {
     const motion = this.state.motions.get(id);
     if (!motion) return undefined;
-    const yes = motion.votes.yes.length;
-    const no = motion.votes.no.length;
-    const abstain = motion.votes.abstain.length;
+    const yes = motion.votes.yes.size;
+    const no = motion.votes.no.size;
+    const abstain = motion.votes.abstain.size;
     return { yes, no, abstain, total: yes + no + abstain };
   }
 
@@ -161,7 +165,18 @@ export class VoteRegister {
   }
 
   get snapshot(): VoteRegisterState {
-    return { motions: new Map(this.state.motions) };
+    const motions = new Map<string, Motion>();
+    for (const [id, m] of this.state.motions) {
+      motions.set(id, {
+        ...m,
+        votes: {
+          yes: new Set(m.votes.yes),
+          no: new Set(m.votes.no),
+          abstain: new Set(m.votes.abstain),
+        },
+      });
+    }
+    return { motions };
   }
 
   // ─── Event builders ────────────────────────────────────────────────────────

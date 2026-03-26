@@ -33,4 +33,6 @@ export interface TimelineEntry {
 
 export interface TimelineState {
   entries: Map<string, TimelineEntry>;
+  /** Running set of all tags across active entries. */
+  activeTags: Map<string, number>;
 }

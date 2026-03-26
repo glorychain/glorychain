@@ -36,9 +36,9 @@ export interface WithdrawEvent {
 export type VoteEvent = MotionEvent | CastEvent | CloseEvent | WithdrawEvent;
 
 export interface MotionVotes {
-  yes: string[];
-  no: string[];
-  abstain: string[];
+  yes: Set<string>;
+  no: Set<string>;
+  abstain: Set<string>;
 }
 
 export interface Motion {
