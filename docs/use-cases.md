@@ -122,6 +122,120 @@ Block 3   "ROLLBACK to v2.14.0 — p99 latency spike post-deploy. Triggered: aut
 
 ---
 
+---
+
+## 💻 Developer tooling — architecture decision records (structured)
+
+**The problem:** Engineering teams make architectural decisions that shape codebases for years. The reasons get lost. New engineers can't tell why things are the way they are.
+
+**Before glorychain:** ADRs live in a wiki that anyone can edit. The original decision and its rationale quietly drift as the page gets updated.
+
+**With glorychain:**
+
+```bash
+glorychain init \
+  --name "API Platform Architecture Decisions" \
+  --purpose "Immutable record of all architecture decisions for the API platform team."
+```
+
+Each ADR is a signed, schema-validated block:
+
+```json
+{
+  "title": "Use tRPC for internal API layer",
+  "status": "Accepted",
+  "decision": "Adopt tRPC v11 for all client-server communication.",
+  "rationale": "End-to-end type safety eliminates an entire class of runtime errors.",
+  "consequences": "All API consumers must use the TypeScript client.",
+  "author": "finn@glorychain.io"
+}
+```
+
+**What you can now prove:** Every ADR is permanently attributed to its author, timestamped, and hash-linked. A superseded decision still exists — with its original rationale — because blocks cannot be deleted.
+
+---
+
+## ⚙️ DevOps — production service config audit log (structured)
+
+**The problem:** Production config changes are made by multiple people across multiple systems. When something breaks at 3am, reconstructing what changed and when is painful.
+
+**Before glorychain:** Config changes live in environment variables, Kubernetes secrets, or a shared spreadsheet — none of which have a tamper-evident history.
+
+**With glorychain:**
+
+```bash
+glorychain init \
+  --name "Production Service Config" \
+  --purpose "Tamper-evident audit log of all configuration changes to production services."
+```
+
+Every change is an append-only event:
+
+```json
+{ "type": "SET", "key": "api.rate_limit.requests_per_minute", "value": "500" }
+```
+
+The chain gives you a complete, ordered history of every SET and DELETE — who made it, when, and what the value was before.
+
+**What you can now prove:** During a post-mortem, the chain is the authoritative timeline. No one can quietly revert a change and pretend it didn't happen.
+
+---
+
+## 👥 HR / ops — team membership register (structured)
+
+**The problem:** Who is on the team? When did they join? When did they leave? Who approved the role change? These questions are surprisingly hard to answer from most HR systems.
+
+**Before glorychain:** Spreadsheets, Notion pages, or HR software — all editable, none with cryptographic history.
+
+**With glorychain:**
+
+```bash
+glorychain init \
+  --name "Platform Team Roster" \
+  --purpose "Authoritative membership registry for the platform engineering team."
+```
+
+Every join, departure, and role change is a signed event:
+
+```json
+{ "type": "JOIN",        "id": "alice@glorychain.io", "name": "Alice Chen", "role": "Senior Engineer" }
+{ "type": "ROLE_CHANGE", "id": "bob@glorychain.io",   "role": "Senior Engineer" }
+{ "type": "LEAVE",       "id": "alice@glorychain.io",  "reason": "Moved to new role at Stripe" }
+```
+
+**What you can now prove:** At any point in time you can replay the chain to reconstruct the exact team composition. Audit requests — from legal, compliance, or regulators — have a cryptographic answer.
+
+---
+
+## 🏢 Engineering org structure (structured)
+
+**The problem:** Reporting lines and seniority decisions are made informally and recorded in systems that can be edited. Disputes about authority or chain of command are hard to resolve.
+
+**Before glorychain:** The org chart lives in Notion or Workday — both editable, neither verifiable.
+
+**With glorychain:** Use the `OrgTree` structure to maintain a live, replayable org chart on-chain:
+
+```typescript
+import { OrgTree } from "@glorychain/structures";
+
+const tree = OrgTree.fromChain(chain);
+
+tree.get("bob@glorychain.io");           // OrgMember { role: "Staff Engineer", ... }
+tree.directReports("finn@glorychain.io") // [Alice Chen, Bob Okafor]
+tree.pathTo("yuki@glorychain.io")        // [Finn → Alice → Yuki]
+```
+
+Events on the chain:
+
+```json
+{ "type": "APPOINT", "id": "alice@glorychain.io", "name": "Alice Chen", "role": "Engineering Manager", "reportsTo": "finn@glorychain.io" }
+{ "type": "PROMOTE", "id": "bob@glorychain.io",   "role": "Staff Engineer", "reportsTo": "finn@glorychain.io" }
+```
+
+**What you can now prove:** Every appointment, promotion, and transfer is permanently on record. The org chart at any point in history can be reconstructed by replaying the chain to that block.
+
+---
+
 ## Have a use case to share?
 
 We want to hear about chains people are building in the real world. [Open a discussion](https://github.com/finnfitzsimons3/glorychain/discussions) or [file an issue](https://github.com/finnfitzsimons3/glorychain/issues) with the `use-case` label.

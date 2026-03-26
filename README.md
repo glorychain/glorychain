@@ -6,13 +6,17 @@
 [![npm][npm_img]][npm_url]
 [![License][license_img]][license_url]
 
-> An open protocol for verifiable institutional truth.
+> The tamper-evident event log for applications that need to be trusted.
 
 </div>
 
 ---
 
-Glorychain lets anyone create a tamper-evident chain of signed records. Every block is Ed25519-signed and SHA-256 hash-linked to the one before it. Modify any block and every subsequent hash breaks — tampering is mathematically detectable by anyone with a copy of the chain.
+Your logs can be deleted. Your audit trail shouldn't be.
+
+Glorychain is a tamper-evident, cryptographically signed event log — the useful part of blockchain, without the network, the tokens, or the ops burden. Every block is Ed25519-signed and SHA-256 hash-linked to the one before it. Modify any block and every subsequent hash breaks — tampering is mathematically detectable by anyone with a copy of the chain.
+
+Think of it as **Git for your application's events**: append-only history, full replay, independently verifiable. Store it wherever you already store things — files, S3, Postgres, GitHub.
 
 **The platform is a notary, not a judge.**
 
