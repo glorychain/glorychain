@@ -101,7 +101,7 @@ MemberSet.join({ id, name, role? }) / MemberSet.leave({ id }) / MemberSet.roleCh
 // VoteRegister — motion and vote record
 const register = VoteRegister.fromChain(chain)
 register.tally(id) / register.open / register.passed / register.withdrawn
-VoteRegister.motion({ id, title, proposedBy }) / VoteRegister.cast({ motionId, voterId, vote }) / VoteRegister.close({ id, outcome })
+VoteRegister.motion({ id, title, proposedBy }) / VoteRegister.cast({ motionId, voterId, vote }) / VoteRegister.close({ motionId, outcome })
 
 // DecisionLog — tamper-evident decision record
 const log = DecisionLog.fromChain(chain)
@@ -121,7 +121,7 @@ DocumentRegister.publish({ id, title, hash, version }) / DocumentRegister.supers
 // AccessList — permission register
 const access = AccessList.fromChain(chain)
 access.isGranted(id) / access.granted / access.stale()
-AccessList.grant({ id, resource, grantedBy, expiresAt? }) / AccessList.revoke({ id, revokedBy }) / AccessList.expire({ id })
+AccessList.grant({ id, label?, grantedBy, expiresAt? }) / AccessList.revoke({ id, revokedBy }) / AccessList.expire({ id })
 
 // ChangeLog — software release register
 const changelog = ChangeLog.fromChain(chain)
