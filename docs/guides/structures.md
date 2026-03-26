@@ -571,8 +571,10 @@ interface TimelineEntry {
   title: string
   body: string
   tags: string[]
-  active: boolean           // false after RETRACT
+  date: string | null
+  retracted: boolean        // true after RETRACT
   addedAtBlock: number
+  retractedAtBlock: number | null
   metadata: Record<string, string>
 }
 ```
@@ -652,7 +654,7 @@ const register = DocumentRegister.fromChain(chain)
 register.get("POL-INFOSEC-001")       // Document | undefined
 register.byHash("sha256:abc123...")   // Document | undefined — look up by content hash
 register.all                          // Document[]
-register.current                      // Document[] — status === "published"
+register.current                      // Document[] — status === "current"
 register.superseded                   // Document[]
 register.withdrawn                    // Document[]
 ```
@@ -664,11 +666,12 @@ interface Document {
   id: string
   title: string
   hash: string
-  version: string
-  status: "published" | "superseded" | "withdrawn"
-  supersedes?: string
-  supersededBy?: string
+  url: string | null
+  version: string | null
+  status: "current" | "superseded" | "withdrawn"
+  supersededBy: string | null
   publishedAtBlock: number
+  lastUpdatedAtBlock: number
   metadata: Record<string, string>
 }
 ```
@@ -841,10 +844,12 @@ log.latest                            // Release | undefined — most recent act
 interface Release {
   version: string
   notes: string
-  tags: string[]
   breaking: boolean
   status: "active" | "deprecated" | "yanked"
+  successor: string | null    // set when deprecated in favour of a newer version
+  yankReason: string | null
   releasedAtBlock: number
+  lastUpdatedAtBlock: number
   metadata: Record<string, string>
 }
 ```

@@ -82,11 +82,18 @@ Checks: hash continuity, signatures, block sequence, timestamp validity, schema 
 
 ## inspect
 
-Display the contents of a chain.
+Display the contents of a specific block.
 
 ```bash
-glorychain inspect --chain <chainId> [--dir ./chains] [--json]
+glorychain inspect --chain <chainId> --block <n> [--dir ./chains] [--json]
 ```
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `--chain` | yes | — | Chain ID |
+| `--block` | yes | — | Block index to inspect |
+| `--dir` | no | `./chains` | Storage directory |
+| `--json` | no | — | Output as JSON |
 
 ---
 
@@ -126,37 +133,63 @@ Fork a chain from a given block.
 ```bash
 glorychain fork \
   --chain <chainId> \
-  --at <blockNumber> \
+  --block <n> \
   --key <privateKey> \
   --pubkey <publicKey> \
-  --reason "Key compromise" \
+  --content "Fork genesis content" \
+  [--purpose fork] \
+  [--creator anonymous] \
   [--dir ./chains]
 ```
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `--chain` | yes | — | Source chain ID |
+| `--block` | yes | — | Block number to fork from |
+| `--key` | yes | — | Ed25519 private key (base64url) |
+| `--pubkey` | yes | — | Ed25519 public key (base64url) |
+| `--content` | yes | — | Fork genesis block content |
+| `--purpose` | no | `"fork"` | Fork purpose description |
+| `--creator` | no | `"anonymous"` | Creator identifier |
+| `--dir` | no | `./chains` | Storage directory |
+| `--json` | no | — | Output as JSON |
 
 ---
 
 ## migrate
 
-Migrate a chain between connectors.
+Migrate a chain from one filesystem directory to another.
 
 ```bash
 glorychain migrate \
   --chain <chainId> \
-  --from fs \
-  --to github \
-  --repo owner/repo \
-  [--dir ./chains]
+  --from ./chains \
+  --to ./archive
 ```
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `--chain` | yes | — | Chain ID |
+| `--from` | yes | — | Source directory |
+| `--to` | yes | — | Destination directory |
+| `--json` | no | — | Output as JSON |
 
 ---
 
 ## feed
 
-Generate an RSS feed of a chain.
+Generate an Atom 1.0 RSS feed of a chain.
 
 ```bash
-glorychain feed --chain <chainId> [--dir ./chains]
+glorychain feed --chain <chainId> [--dir ./chains] [--base-url <url>]
 ```
+
+| Flag | Required | Default | Description |
+|---|---|---|---|
+| `--chain` | yes | — | Chain ID |
+| `--dir` | no | `./chains` | Storage directory |
+| `--base-url` | no | `https://glorychain.dev` | Base URL for feed links |
+| `--json` | no | — | Output as JSON |
 
 ---
 
