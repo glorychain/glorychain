@@ -39,7 +39,7 @@ conformance run \
 | Suite | What it verifies |
 |-------|-----------------|
 | **Block hash chain** | Every block's `previousHash` is the SHA-256 hash of the prior block's canonical content |
-| **Signature integrity** | Every block's Ed25519 signature verifies against its `authorPublicKey` |
+| **Signature integrity** | Every block's Ed25519 signature verifies against its `publicKey` |
 | **Genesis block** | The chain has exactly one genesis block, at position 0, with `previousHash: null` |
 | **Ordering** | Block numbers are monotonically increasing with no gaps |
 | **Schema** | Every block conforms to the protocol Zod schema — required fields present, correct types |

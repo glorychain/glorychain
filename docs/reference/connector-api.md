@@ -7,16 +7,17 @@ A connector is a persistence backend for glorychain. The protocol ships with fou
 ## The Connector interface
 
 ```ts
-import type { Chain } from "@glorychain/core"
+import type { Chain, ThreatEvent, VerificationResult } from "@glorychain/core"
 
 interface Connector {
+  version: string                                           // connector implementation version
   read(chainId: string): Promise<Chain>
-  write(chain: Chain): Promise<void>
-  list(): Promise<string[]>
+  write(chain: Chain): Promise<void>                        // idempotent — safe to call twice
+  watch(chainId: string): AsyncIterable<ThreatEvent>        // never throws — emits errors as ThreatEvent
+  migrate(chainId: string, target: Connector): Promise<void>
+  verify(chainId: string): Promise<VerificationResult>
 }
 ```
-
-That's it. Three methods.
 
 ---
 
@@ -156,28 +157,21 @@ See the [self-hosted chain guide](../guides/self-hosted-chain.md) for the full G
 Connectors store and retrieve the `Chain` type:
 
 ```ts
-type Chain = {
-  metadata: {
-    chainId: string
-    purpose: string
-    creatorId: string
-    identityType: string
-    createdAt: string
-    protocolVersion: string
-    schema?: object
-  }
-  blocks: Block[]
+type ChainMetadata = {
+  chainId: string
+  createdAt: string
+  protocolVersion: string
+  hashAlgorithm: string
+  signatureScheme: string
+  migrationHistory: MigrationEvent[]
+  knownForks: ForkReference[]
+  transferHistory: TransferEvent[]
 }
 
-type Block = {
-  blockNumber: number
-  chainId: string
-  content: string
-  timestamp: string
-  previousHash: string
-  publicKey: string
-  signature: string
-  protocolVersion: string
+// purpose, creatorId, identityType, and schema live in the genesis block (blocks[0])
+type Chain = {
+  metadata: ChainMetadata
+  blocks: [GenesisBlock, ...Block[]]
 }
 ```
 

@@ -11,11 +11,20 @@ pnpm build
 
 ## Run an example
 
+From the `examples/` directory:
+
 ```bash
-npx tsx examples/01-core-basics/index.ts
-npx tsx examples/02-key-value-store/index.ts
-npx tsx examples/04-org-tree/index.ts
+cd examples
+pnpm 01   # core basics
+pnpm 02   # key-value store
+pnpm 03   # member set
 # etc.
+```
+
+Or from the repo root:
+
+```bash
+pnpm --filter @glorychain/examples 01
 ```
 
 ## Examples

@@ -26,7 +26,7 @@ const createResult = createChain(
     creatorId: "ci-bot@glorychain.io",
     identityType: "anonymous",
     publicKey,
-    schema: ChangeLog.genesisSchema,
+    contentSchema: ChangeLog.genesisSchema,
   },
   privateKey,
 );

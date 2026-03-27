@@ -113,14 +113,16 @@ The GitHub connector supports watching a chain for tampering:
 ```ts
 const connector = new GitHubConnector({ owner: "your-org", repo: "your-repo" })
 
-connector.watch(chainId, (event) => {
-  if (event.type === "tampered") {
-    console.error("Chain tampered at block", event.blockNumber)
+for await (const event of connector.watch(chainId)) {
+  if (event.type === "HASH_MISMATCH") {
+    console.error("Chain tampered:", event.detail)
+  } else if (event.type === "FILE_MISSING") {
+    console.error("Chain file missing — possible deletion attack")
   }
-})
+}
 ```
 
-This polls the remote chain and alerts if the hash chain breaks.
+This polls the remote chain on an interval (default 30 s) and yields a `ThreatEvent` whenever tampering or an unexpected state is detected.
 
 ---
 

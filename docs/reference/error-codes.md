@@ -1,6 +1,6 @@
 # Error codes
 
-All error codes produced by `verifyChain` and `verifyBlock`.
+All error codes produced by `verifyChain` and `verifySingleBlock`.
 
 ---
 
@@ -32,8 +32,6 @@ Errors produced by CLI commands.
 | `Invalid private key` | The `--key` value is not a valid base64url-encoded Ed25519 private key. |
 | `Invalid public key` | The `--pubkey` value is not a valid base64url-encoded Ed25519 public key. |
 | `Chain ID mismatch` | The chain file's internal `chainId` does not match the filename. The file may have been moved or renamed. |
-| `Schema file not found` | The path passed to `--schema` does not exist. |
-| `Invalid schema` | The schema file is not valid JSON Schema v7. |
 
 ---
 

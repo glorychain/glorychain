@@ -83,10 +83,10 @@ valid   true
 ## 5. Inspect the chain
 
 ```bash
-glorychain inspect --chain 550e8400-e29b-41d4-a716-446655440000
+glorychain inspect --chain 550e8400-e29b-41d4-a716-446655440000 --block 0
 ```
 
-This displays every block with its content, timestamp, signer, and hash.
+This displays the specified block with its content, timestamp, signer, and hash. Use `--block <n>` to select the block index (0-based).
 
 ---
 

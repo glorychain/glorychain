@@ -51,7 +51,7 @@ const { value: chain } = createChain({
   creatorId: "coo@acme.com",
   identityType: "anonymous",
   publicKey,
-  schema: OrgTree.genesisSchema,
+  contentSchema: OrgTree.genesisSchema,
 }, privateKey)
 
 await connector.write(chain)
@@ -120,7 +120,7 @@ const { value: chain } = createChain({
   creatorId: "deploy-bot@company.com",
   identityType: "anonymous",
   publicKey,
-  schema: KeyValueStore.genesisSchema,
+  contentSchema: KeyValueStore.genesisSchema,
 }, privateKey)
 
 await appendBlock(chain, { content: KeyValueStore.set({
@@ -166,7 +166,7 @@ const { value: chain } = createChain({
   creatorId: "board.chair@acme-aid.org",
   identityType: "anonymous",
   publicKey,
-  schema: MemberSet.genesisSchema,
+  contentSchema: MemberSet.genesisSchema,
 }, privateKey)
 
 await appendBlock(chain, { content: MemberSet.join({
@@ -217,7 +217,7 @@ const { value: chain } = createChain({
   creatorId: "secretary@acme-aid.org",
   identityType: "anonymous",
   publicKey,
-  schema: VoteRegister.genesisSchema,
+  contentSchema: VoteRegister.genesisSchema,
 }, privateKey)
 
 // Open a motion
@@ -272,7 +272,7 @@ const { value: chain } = createChain({
   creatorId: "core-team@hyperdb.dev",
   identityType: "anonymous",
   publicKey,
-  schema: DecisionLog.genesisSchema,
+  contentSchema: DecisionLog.genesisSchema,
 }, privateKey)
 
 await appendBlock(chain, { content: DecisionLog.record({
@@ -325,7 +325,7 @@ const { value: chain } = createChain({
   creatorId: "senator.rodriguez@senate.gov",
   identityType: "anonymous",
   publicKey,
-  schema: Timeline.genesisSchema,
+  contentSchema: Timeline.genesisSchema,
 }, privateKey)
 
 await appendBlock(chain, { content: Timeline.entry({
@@ -375,7 +375,7 @@ const { value: chain } = createChain({
   creatorId: "secretary@acme-aid.org",
   identityType: "anonymous",
   publicKey,
-  schema: DocumentRegister.genesisSchema,
+  contentSchema: DocumentRegister.genesisSchema,
 }, privateKey)
 
 await appendBlock(chain, { content: DocumentRegister.publish({
@@ -431,7 +431,7 @@ const { value: chain } = createChain({
   creatorId: "security@company.com",
   identityType: "anonymous",
   publicKey,
-  schema: AccessList.genesisSchema,
+  contentSchema: AccessList.genesisSchema,
 }, privateKey)
 
 await appendBlock(chain, { content: AccessList.grant({
@@ -478,7 +478,7 @@ const { value: chain } = createChain({
   creatorId: "releases@glorychain.dev",
   identityType: "anonymous",
   publicKey,
-  schema: ChangeLog.genesisSchema,
+  contentSchema: ChangeLog.genesisSchema,
 }, privateKey)
 
 await appendBlock(chain, { content: ChangeLog.release({

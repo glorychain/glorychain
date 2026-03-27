@@ -17,13 +17,13 @@ Use this connector when you want chains to live on disk — for local developmen
 ```typescript
 import { FsConnector } from "@glorychain/fs";
 
-const connector = new FsConnector({ dir: "./chains" });
+const connector = new FsConnector("./chains");
 
 // Read a chain
 const chain = await connector.read(chainId);
 
 // Write (after appending a block via @glorychain/core)
-await connector.write(chainId, updatedChain);
+await connector.write(updatedChain);
 ```
 
 Each chain is a single JSON file at `{dir}/{chainId}.json`.
@@ -36,11 +36,14 @@ The `watch()` method returns an async iterable that yields events whenever the c
 
 ```typescript
 for await (const event of connector.watch(chainId)) {
-  if (event.type === "BLOCK_APPENDED") {
-    console.log(`New block on chain ${event.chainId}`);
+  if (event.type === "FILE_MODIFIED") {
+    console.log(`Chain file changed: ${event.chainId}`);
   }
-  if (event.type === "HASH_MISMATCH") {
-    console.error("ALERT: chain integrity broken — possible tampering detected");
+  if (event.type === "FILE_MISSING") {
+    console.error("ALERT: chain file missing — possible deletion");
+  }
+  if (event.type === "UNEXPECTED_ERROR") {
+    console.error("Watch error:", event.detail);
   }
 }
 ```
@@ -55,11 +58,8 @@ The file system connector watches not just for new blocks, but for *anomalies* �
 
 | Event type | What it means |
 |------------|---------------|
-| `BLOCK_APPENDED` | A valid new block was appended |
 | `FILE_MISSING` | The chain file was deleted or moved |
-| `FILE_MODIFIED` | The chain file changed but didn't pass verification |
-| `HASH_MISMATCH` | A block's `previousHash` doesn't match the prior block's hash |
-| `SIGNATURE_INVALID` | A block's Ed25519 signature failed verification |
+| `FILE_MODIFIED` | The chain file changed outside the protocol |
 | `UNEXPECTED_ERROR` | An internal error occurred during the watch cycle |
 
 In a tamper-evident system, threat events are as important as normal events. A `HASH_MISMATCH` on a chain that previously verified is evidence of modification.
@@ -69,11 +69,12 @@ In a tamper-evident system, threat events are as important as normal events. A `
 ## Configuration
 
 ```typescript
-const connector = new FsConnector({
-  dir:               "./chains",  // directory where chain JSON files live
-  watchIntervalMs:   1000,        // poll interval for watch() — default: 1000ms
-  verifyOnRead:      true,        // run full verification on every read — default: true
-});
+const connector = new FsConnector(
+  "./chains",     // directory where chain JSON files live
+  {
+    pollIntervalMs: 2000,   // poll interval for watch() — default: 2000ms
+  }
+);
 ```
 
 ---
@@ -84,18 +85,33 @@ Each chain file is a single JSON document containing the full `Chain` object:
 
 ```json
 {
-  "id": "3e7c9f2a-...",
-  "name": "My Organisation Decisions",
-  "createdAt": "2026-03-22T10:00:00.000Z",
+  "metadata": {
+    "chainId": "3e7c9f2a-...",
+    "createdAt": "2026-03-22T10:00:00.000Z",
+    "protocolVersion": "0.0.1",
+    "hashAlgorithm": "sha256",
+    "signatureScheme": "ed25519",
+    "migrationHistory": [],
+    "knownForks": [],
+    "transferHistory": []
+  },
   "blocks": [
     {
       "blockNumber": 0,
+      "chainId": "3e7c9f2a-...",
       "content": "Genesis: track all board decisions publicly",
-      "authorPublicKey": "MCowBQYDK2V...",
+      "publicKey": "MCowBQYDK2V...",
       "signature": "base64url...",
       "previousHash": null,
       "hash": "sha256hex...",
-      "timestamp": "2026-03-22T10:00:00.000Z"
+      "timestamp": "2026-03-22T10:00:00.000Z",
+      "protocolVersion": "0.0.1",
+      "creatorId": "board.chair@acme.org",
+      "purpose": "governance",
+      "identityType": "anonymous",
+      "hashAlgorithm": "sha256",
+      "signatureScheme": "ed25519",
+      "contentSchema": null
     }
   ]
 }
@@ -110,7 +126,11 @@ The full protocol spec for the chain and block schema is in [`@glorychain/core`]
 The glorychain CLI uses the file system connector by default:
 
 ```bash
-glorychain create --name "My Chain" --purpose "Track decisions" --key $PRIVATE_KEY
+glorychain create \
+  --key $PRIVATE_KEY \
+  --pubkey $PUBLIC_KEY \
+  --content "My Chain" \
+  --purpose "Track decisions"
 glorychain verify --chain <chainId>
 ```
 

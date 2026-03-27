@@ -26,7 +26,7 @@ const createResult = createChain(
     creatorId: "board.secretary@glorychain.io",
     identityType: "anonymous",
     publicKey,
-    schema: DecisionLog.genesisSchema,
+    contentSchema: DecisionLog.genesisSchema,
   },
   privateKey,
 );

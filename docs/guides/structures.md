@@ -51,7 +51,7 @@ const chain = createChain(
     creatorId: "coo@acme.com",
     identityType: "anonymous",
     publicKey,
-    schema: OrgTree.genesisSchema,  // enforces all blocks are valid OrgEvents
+    contentSchema: OrgTree.genesisSchema,  // enforces all blocks are valid OrgEvents
   },
   privateKey,
 )
@@ -165,7 +165,7 @@ const chain = createChain(
     creatorId: "deploy-bot@company.com",
     identityType: "anonymous",
     publicKey,
-    schema: KeyValueStore.genesisSchema,
+    contentSchema: KeyValueStore.genesisSchema,
   },
   privateKey,
 )
@@ -233,7 +233,7 @@ const chain = createChain(
     creatorId: "board.chair@acme-aid.org",
     identityType: "anonymous",
     publicKey,
-    schema: MemberSet.genesisSchema,
+    contentSchema: MemberSet.genesisSchema,
   },
   privateKey,
 )
@@ -315,7 +315,7 @@ const chain = createChain(
     creatorId: "governance@protocol.org",
     identityType: "anonymous",
     publicKey,
-    schema: VoteRegister.genesisSchema,
+    contentSchema: VoteRegister.genesisSchema,
   },
   privateKey,
 )
@@ -418,7 +418,7 @@ const chain = createChain(
     creatorId: "board.secretary@acme.com",
     identityType: "anonymous",
     publicKey,
-    schema: DecisionLog.genesisSchema,
+    contentSchema: DecisionLog.genesisSchema,
   },
   privateKey,
 )
@@ -436,19 +436,18 @@ await appendBlock(chain, { content: DecisionLog.record({
   metadata: { vote: "5-0", reference: "BOD-2026-Q1" },
 }), publicKey }, privateKey)
 
-// Supersede with a new decision
-await appendBlock(chain, { content: DecisionLog.supersede({
+// Record the new decision
+await appendBlock(chain, { content: DecisionLog.record({
   id: "RES-2026-002",
   title: "Approve revised Q1 budget",
   body: "The board approves the revised Q1 2026 budget of $2.6M.",
   decidedBy: "board",
-  supersedes: "RES-2026-001",
 }), publicKey }, privateKey)
 
-// Withdraw a decision
-await appendBlock(chain, { content: DecisionLog.withdraw({
+// Mark the old decision as superseded
+await appendBlock(chain, { content: DecisionLog.supersede({
   id: "RES-2026-001",
-  reason: "Superseded by RES-2026-002",
+  supersededBy: "RES-2026-002",
 }), publicKey }, privateKey)
 
 // Annotate without changing status
@@ -478,12 +477,12 @@ interface Decision {
   id: string
   title: string
   body: string
-  decidedBy: string
+  decidedBy: string | null
   status: "active" | "superseded" | "withdrawn"
-  supersedes?: string
-  supersededBy?: string
+  supersededBy: string | null
   annotations: string[]
   recordedAtBlock: number
+  lastUpdatedAtBlock: number
   metadata: Record<string, string>
 }
 ```
@@ -493,7 +492,7 @@ interface Decision {
 | Builder | Description |
 |---|---|
 | `DecisionLog.record({ id, title, body, decidedBy, metadata? })` | Record a new decision |
-| `DecisionLog.supersede({ id, title, body, decidedBy, supersedes, metadata? })` | Record a decision that supersedes an earlier one |
+| `DecisionLog.supersede({ id, supersededBy, reason? })` | Mark a decision as superseded by another |
 | `DecisionLog.withdraw({ id, reason? })` | Withdraw a decision |
 | `DecisionLog.annotate({ id, note })` | Add a note without changing status |
 
@@ -517,7 +516,7 @@ const chain = createChain(
     creatorId: "pm@company.com",
     identityType: "anonymous",
     publicKey,
-    schema: Timeline.genesisSchema,
+    contentSchema: Timeline.genesisSchema,
   },
   privateKey,
 )
@@ -606,7 +605,7 @@ const chain = createChain(
     creatorId: "compliance@acme.com",
     identityType: "anonymous",
     publicKey,
-    schema: DocumentRegister.genesisSchema,
+    contentSchema: DocumentRegister.genesisSchema,
   },
   privateKey,
 )
@@ -624,13 +623,18 @@ await appendBlock(chain, { content: DocumentRegister.publish({
   metadata: { owner: "ciso@acme.com", review_date: "2027-01-01" },
 }), publicKey }, privateKey)
 
-// Supersede with a new version
-await appendBlock(chain, { content: DocumentRegister.supersede({
+// Publish the new version
+await appendBlock(chain, { content: DocumentRegister.publish({
   id: "POL-INFOSEC-002",
   title: "Information Security Policy",
   hash: "sha256:def456...",
   version: "2.0",
-  supersedes: "POL-INFOSEC-001",
+}), publicKey }, privateKey)
+
+// Mark the old version as superseded
+await appendBlock(chain, { content: DocumentRegister.supersede({
+  id: "POL-INFOSEC-001",
+  supersededBy: "POL-INFOSEC-002",
 }), publicKey }, privateKey)
 
 // Withdraw
@@ -681,7 +685,7 @@ interface Document {
 | Builder | Description |
 |---|---|
 | `DocumentRegister.publish({ id, title, hash, version, metadata? })` | Publish a new document |
-| `DocumentRegister.supersede({ id, title, hash, version, supersedes, metadata? })` | Publish a new version that supersedes an existing one |
+| `DocumentRegister.supersede({ id, supersededBy, reason? })` | Mark a document as superseded by another |
 | `DocumentRegister.withdraw({ id, reason? })` | Withdraw a document |
 | `DocumentRegister.restore({ id, reason? })` | Restore a withdrawn document |
 
@@ -705,7 +709,7 @@ const chain = createChain(
     creatorId: "platform-team@company.com",
     identityType: "anonymous",
     publicKey,
-    schema: AccessList.genesisSchema,
+    contentSchema: AccessList.genesisSchema,
   },
   privateKey,
 )
@@ -793,7 +797,7 @@ const chain = createChain(
     creatorId: "ci-bot@company.com",
     identityType: "anonymous",
     publicKey,
-    schema: ChangeLog.genesisSchema,
+    contentSchema: ChangeLog.genesisSchema,
   },
   privateKey,
 )

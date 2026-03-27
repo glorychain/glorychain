@@ -21,12 +21,15 @@ pnpm test
 ## Repo structure
 
 ```
-packages/core        @glorychain/core    — protocol library (chain lifecycle, crypto, verification)
-packages/shared      @glorychain/shared  — Zod validators + shared types
-packages/fs          @glorychain/fs      — filesystem connector
-packages/github      @glorychain/github  — GitHub connector
-apps/cli             glorychain          — CLI (11 commands)
-apps/conformance                         — protocol compliance test suite
+packages/core        @glorychain/core        — protocol library (chain lifecycle, crypto, verification)
+packages/shared      @glorychain/shared      — Zod validators + shared types
+packages/structures  @glorychain/structures  — stateful data structures (OrgTree, KeyValueStore, …)
+packages/fs          @glorychain/fs          — filesystem connector
+packages/github      @glorychain/github      — GitHub connector + tamper detection
+packages/s3          @glorychain/s3          — S3/R2/MinIO connector
+packages/postgres    @glorychain/postgres    — PostgreSQL connector
+apps/cli             glorychain              — CLI (11 commands)
+apps/conformance                             — protocol compliance test suite
 ```
 
 ---
@@ -81,9 +84,12 @@ A connector implements the `Connector` interface from `@glorychain/core`:
 
 ```ts
 interface Connector {
+  version: string
   read(chainId: string): Promise<Chain>
   write(chain: Chain): Promise<void>
-  list(): Promise<string[]>
+  watch(chainId: string): AsyncIterable<ThreatEvent>
+  migrate(chainId: string, target: Connector): Promise<void>
+  verify(chainId: string): Promise<VerificationResult>
 }
 ```
 
