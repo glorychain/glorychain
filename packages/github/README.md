@@ -30,7 +30,7 @@ const connector = new GitHubConnector({
 const chain = await connector.read(chainId);
 
 // Write (after appending a block via @glorychain/core)
-await connector.write(chainId, chain);
+await connector.write(chain);
 ```
 
 ### Watching for changes
@@ -39,11 +39,14 @@ The `watch()` method polls the GitHub Contents API and yields events on changes.
 
 ```typescript
 for await (const event of connector.watch(chainId)) {
-  if (event.type === "BLOCK_APPENDED") {
-    console.log("New verified block:", event.chainId);
+  if (event.type === "FILE_MISSING") {
+    console.error("Chain file missing — possible deletion attack");
   }
-  if (event.type === "HASH_MISMATCH") {
+  if (event.type === "BLOCK_MODIFIED") {
     console.error("Chain integrity broken — investigate immediately");
+  }
+  if (event.type === "REPO_MADE_PRIVATE") {
+    console.warn("Repo visibility changed — public chain may be inaccessible");
   }
 }
 ```
@@ -96,9 +99,10 @@ Then embed it in the genesis block so governance itself is on-chain and tamper-e
 
 ```bash
 glorychain create \
-  --name "Acme NGO Governance" \
+  --key $PRIVATE_KEY \
+  --pubkey $PUBLIC_KEY \
   --content "$(cat CHAIN_CHARTER.md)" \
-  --key $PRIVATE_KEY
+  --purpose "governance"
 ```
 
 The charter is now part of the immutable record. Anyone can read it, and nobody can quietly change it.
@@ -126,16 +130,13 @@ PRs that break chain integrity are blocked before merging. **Tamper-evidence in 
 
 ## CLI shortcut
 
+Use `glorychain init --github` to scaffold GitHub Actions workflows for automated chain management in your repo:
+
 ```bash
-glorychain init \
-  --owner my-org \
-  --repo  my-repo \
-  --token $GITHUB_TOKEN \
-  [--branch main] \
-  [--dir chains]
+glorychain init --github
 ```
 
-This runs `scaffoldRepo()` and writes `.glorychain.json` to the current directory. All subsequent CLI commands in this repo auto-detect the GitHub connector from that config file.
+This creates `.github/workflows/chain-genesis.yml` and `.github/workflows/chain-append.yml`. Add `CHAIN_PRIVATE_KEY` and `CHAIN_PUBLIC_KEY` to your GitHub repo secrets to activate them.
 
 ---
 

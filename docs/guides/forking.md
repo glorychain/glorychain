@@ -24,10 +24,10 @@ Forking is not the same as abandoning a chain. The original chain remains intact
 ```bash
 glorychain fork \
   --chain <originalChainId> \
-  --at <blockNumber> \
+  --block <blockNumber> \
   --key <newPrivateKey> \
   --pubkey <newPublicKey> \
-  --reason "Signing key compromised. New key issued 2026-03-15." \
+  --content "Continuation of <originalChainId> from block <n>. Key compromise — new key issued 2026-03-15." \
   --dir ./chains
 ```
 
@@ -40,11 +40,14 @@ const originalChain = await connector.read(originalChainId)
 
 const result = forkChain(
   originalChain,
+  42,                          // last trusted block number
   {
-    forkPoint: 42,           // last trusted block
-    reason: "Key compromise — new key issued 2026-03-15.",
     content: "Continuation of acme-aid-board-resolutions from block 42 onwards.",
+    purpose: "board-decisions",
+    creatorId: "board.chair@acme-aid.org",
+    identityType: "anonymous",
     publicKey: newPublicKey,
+    forkReason: "Key compromise — new key issued 2026-03-15.",
   },
   newPrivateKey,
 )
@@ -63,15 +66,14 @@ The fork genesis block carries provenance in its metadata:
 
 ```json
 {
-  "metadata": {
-    "chainId": "new-chain-id",
-    "forkedFrom": "original-chain-id",
-    "forkPoint": 42,
-    "forkReason": "Key compromise — new key issued 2026-03-15.",
-    "purpose": "Continuation of board resolutions",
-    "protocolVersion": "0.1"
-  },
-  "blocks": [...]
+  "blockNumber": 0,
+  "chainId": "new-chain-id",
+  "content": "Continuation of acme-aid-board-resolutions from block 42 onwards.",
+  "forkOf": "original-chain-id",
+  "forkFromBlock": 42,
+  "forkSourceBlockHash": "<hash of block 42>",
+  "forkReason": "Key compromise — new key issued 2026-03-15.",
+  "previousHash": null
 }
 ```
 

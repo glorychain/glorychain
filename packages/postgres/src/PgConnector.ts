@@ -116,7 +116,7 @@ export class PgConnector implements Connector {
       return;
     }
 
-    // Normalised: upsert chain row, then upsert all blocks
+    // Normalised: upsert chain row, then batch INSERT all blocks
     const genesis = chain.blocks[0];
     await this.pool.query(
       `INSERT INTO ${this.chainsTable} (chain_id, purpose, creator_id, created_at)
@@ -130,24 +130,36 @@ export class PgConnector implements Connector {
       ],
     );
 
-    for (const block of chain.blocks) {
-      await this.pool.query(
-        `INSERT INTO ${this.blocksTable}
-           (chain_id, block_number, content, hash, previous_hash, signature, public_key, timestamp)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         ON CONFLICT (chain_id, block_number) DO NOTHING`,
-        [
-          chainId,
-          block.blockNumber,
-          JSON.stringify(block),
-          block.hash,
-          block.previousHash,
-          block.signature,
-          block.publicKey,
-          block.timestamp,
-        ],
+    if (chain.blocks.length === 0) return;
+
+    // Batch INSERT — one round trip regardless of chain length
+    const cols = 8;
+    const values: unknown[] = [];
+    const placeholders: string[] = [];
+    chain.blocks.forEach((block, i) => {
+      const base = i * cols;
+      placeholders.push(
+        `($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7}, $${base + 8})`,
       );
-    }
+      values.push(
+        chainId,
+        block.blockNumber,
+        JSON.stringify(block),
+        block.hash,
+        block.previousHash,
+        block.signature,
+        block.publicKey,
+        block.timestamp,
+      );
+    });
+
+    await this.pool.query(
+      `INSERT INTO ${this.blocksTable}
+         (chain_id, block_number, content, hash, previous_hash, signature, public_key, timestamp)
+       VALUES ${placeholders.join(", ")}
+       ON CONFLICT (chain_id, block_number) DO NOTHING`,
+      values,
+    );
   }
 
   async exists(chainId: string): Promise<boolean> {

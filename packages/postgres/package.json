@@ -1,6 +1,6 @@
 {
   "name": "@glorychain/postgres",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "description": "PostgreSQL connector for glorychain — supports Postgres, Supabase, Neon, Railway",
   "main": "./dist/index.mjs",

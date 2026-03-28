@@ -46,7 +46,7 @@ apps/conformance                            — protocol compliance test suite
 - **Chain** — ordered sequence of signed, hash-linked blocks; stored as JSON
 - **Block** — content (string) + timestamp + Ed25519 signature + SHA-256 hash of previous block
 - **Genesis block (block 0)** — first block; contains chain metadata and optional JSON Schema v7 for content validation
-- **Connector** — pluggable storage backend implementing `read / write / list`
+- **Connector** — pluggable storage backend implementing `read / write / watch / migrate / verify`
 - **Structure** — stateful view derived by replaying blocks through a pure reducer (OrgTree, KeyValueStore, MemberSet)
 - **Fork** — new chain branching from existing one; carries provenance reference
 
@@ -59,7 +59,7 @@ import { FsConnector } from "@glorychain/fs"
 const kp = generateKeypair()
 // kp.value = { publicKey: string, privateKey: string } (base64url Ed25519)
 
-const chain = createChain({ content, purpose, creatorId, identityType, publicKey, schema? }, privateKey)
+const chain = createChain({ content, purpose, creatorId, identityType, publicKey, contentSchema? }, privateKey)
 // Returns Result<Chain>
 
 const updated = appendBlock(chain, { content, publicKey }, privateKey)
@@ -101,12 +101,12 @@ MemberSet.join({ id, name, role? }) / MemberSet.leave({ id }) / MemberSet.roleCh
 // VoteRegister — motion and vote record
 const register = VoteRegister.fromChain(chain)
 register.tally(id) / register.open / register.passed / register.withdrawn
-VoteRegister.motion({ id, title, proposedBy }) / VoteRegister.cast({ motionId, voterId, vote }) / VoteRegister.close({ id, outcome })
+VoteRegister.motion({ id, title, proposedBy }) / VoteRegister.cast({ motionId, voterId, vote }) / VoteRegister.close({ motionId, outcome })
 
 // DecisionLog — tamper-evident decision record
 const log = DecisionLog.fromChain(chain)
 log.active / log.superseded / log.lineage(id)
-DecisionLog.record({ id, title, body, decidedBy }) / DecisionLog.supersede({ id, supersedes, ... }) / DecisionLog.withdraw({ id })
+DecisionLog.record({ id, title, body, decidedBy }) / DecisionLog.supersede({ id, supersededBy, reason? }) / DecisionLog.withdraw({ id })
 
 // Timeline — chronological event log
 const timeline = Timeline.fromChain(chain)
@@ -116,12 +116,12 @@ Timeline.entry({ id, title, body, tags? }) / Timeline.retract({ id })
 // DocumentRegister — version-tracked document registry
 const docs = DocumentRegister.fromChain(chain)
 docs.current / docs.byHash(hash)
-DocumentRegister.publish({ id, title, hash, version }) / DocumentRegister.supersede({ id, supersedes, ... }) / DocumentRegister.withdraw({ id })
+DocumentRegister.publish({ id, title, hash, version }) / DocumentRegister.supersede({ id, supersededBy, reason? }) / DocumentRegister.withdraw({ id })
 
 // AccessList — permission register
 const access = AccessList.fromChain(chain)
 access.isGranted(id) / access.granted / access.stale()
-AccessList.grant({ id, resource, grantedBy, expiresAt? }) / AccessList.revoke({ id, revokedBy }) / AccessList.expire({ id })
+AccessList.grant({ id, label?, grantedBy, expiresAt? }) / AccessList.revoke({ id, revokedBy }) / AccessList.expire({ id })
 
 // ChangeLog — software release register
 const changelog = ChangeLog.fromChain(chain)
@@ -129,7 +129,7 @@ changelog.latest / changelog.active / changelog.yanked / changelog.breaking
 ChangeLog.release({ version, notes, breaking? }) / ChangeLog.deprecate({ version }) / ChangeLog.yank({ version })
 
 // Pass genesisSchema to createChain to enforce block structure at the protocol level
-createChain({ ..., schema: OrgTree.genesisSchema }, privateKey)
+createChain({ ..., contentSchema: OrgTree.genesisSchema }, privateKey)
 ```
 
 ## Chain JSON shape
@@ -138,12 +138,13 @@ createChain({ ..., schema: OrgTree.genesisSchema }, privateKey)
 {
   "metadata": {
     "chainId": "uuid",
-    "purpose": "string",
-    "creatorId": "string",
-    "identityType": "anonymous | github | did",
     "createdAt": "ISO8601",
-    "protocolVersion": "0.1",
-    "schema": {}
+    "protocolVersion": "0.0.1",
+    "hashAlgorithm": "sha256",
+    "signatureScheme": "ed25519",
+    "migrationHistory": [],
+    "knownForks": [],
+    "transferHistory": []
   },
   "blocks": [
     {
@@ -155,7 +156,13 @@ createChain({ ..., schema: OrgTree.genesisSchema }, privateKey)
       "hash": "hex",
       "signature": "base64url",
       "publicKey": "base64url",
-      "protocolVersion": "0.1"
+      "protocolVersion": "0.0.1",
+      "creatorId": "string",
+      "purpose": "string",
+      "identityType": "anonymous",
+      "hashAlgorithm": "sha256",
+      "signatureScheme": "ed25519",
+      "contentSchema": null
     }
   ]
 }

@@ -10,7 +10,7 @@ import type {
   WithdrawDocumentEvent,
 } from "./types.js";
 
-const EMPTY_STATE: DocumentRegisterState = { documents: new Map() };
+const EMPTY_STATE: DocumentRegisterState = { documents: new Map(), hashIndex: new Map() };
 
 function parseDocumentEvent(content: string): DocumentEvent | null {
   const parsed = parseJson<DocumentEvent>(content);
@@ -25,6 +25,7 @@ function documentReducer(
   blockNumber: number,
 ): DocumentRegisterState {
   const documents = new Map(state.documents);
+  const hashIndex = new Map(state.hashIndex);
 
   switch (event.type) {
     case "PUBLISH":
@@ -40,6 +41,7 @@ function documentReducer(
         lastUpdatedAtBlock: blockNumber,
         metadata: event.metadata ?? {},
       });
+      hashIndex.set(event.hash, event.id);
       break;
 
     case "SUPERSEDE": {
@@ -81,7 +83,7 @@ function documentReducer(
     }
   }
 
-  return { documents };
+  return { documents, hashIndex };
 }
 
 /**
@@ -135,13 +137,17 @@ export class DocumentRegister {
     return this.all.filter((d) => d.status === "withdrawn");
   }
 
-  /** Find a document by its content hash. */
+  /** Find a document by its content hash. O(1). */
   byHash(hash: string): Document | undefined {
-    return this.all.find((d) => d.hash === hash);
+    const id = this.state.hashIndex.get(hash);
+    return id !== undefined ? this.state.documents.get(id) : undefined;
   }
 
   get snapshot(): DocumentRegisterState {
-    return { documents: new Map(this.state.documents) };
+    return {
+      documents: new Map(this.state.documents),
+      hashIndex: new Map(this.state.hashIndex),
+    };
   }
 
   // ─── Event builders ────────────────────────────────────────────────────────

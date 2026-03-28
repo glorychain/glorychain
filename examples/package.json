@@ -1,0 +1,27 @@
+{
+  "name": "@glorychain/examples",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "01": "tsx 01-core-basics/index.ts",
+    "02": "tsx 02-key-value-store/index.ts",
+    "03": "tsx 03-member-set/index.ts",
+    "04": "tsx 04-org-tree/index.ts",
+    "05": "tsx 05-vote-register/index.ts",
+    "06": "tsx 06-decision-log/index.ts",
+    "07": "tsx 07-timeline/index.ts",
+    "08": "tsx 08-document-register/index.ts",
+    "09": "tsx 09-access-list/index.ts",
+    "10": "tsx 10-changelog/index.ts"
+  },
+  "dependencies": {
+    "@glorychain/core": "workspace:*",
+    "@glorychain/fs": "workspace:*",
+    "@glorychain/structures": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "latest",
+    "typescript": "^5.9.0"
+  }
+}

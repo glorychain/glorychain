@@ -14,7 +14,7 @@ import type {
   TransferEvent,
 } from "./types.js";
 
-const EMPTY_STATE: OrgTreeState = { members: new Map() };
+const EMPTY_STATE: OrgTreeState = { members: new Map(), reportIndex: new Map() };
 
 function parseOrgEvent(content: string): OrgEvent | null {
   const parsed = parseJson<OrgEvent>(content);
@@ -75,18 +75,29 @@ export class OrgTree {
 
   /** Direct reports of a member (active only). */
   directReports(id: string): OrgMember[] {
-    return this.active.filter((m) => m.reportsTo === id);
+    const ids = this.state.reportIndex.get(id);
+    if (!ids) return [];
+    const result: OrgMember[] = [];
+    for (const reportId of ids) {
+      const m = this.state.members.get(reportId);
+      if (m?.active) result.push(m);
+    }
+    return result;
   }
 
   /** All reports in the subtree below a member (recursive, active only). */
   subtree(id: string): OrgMember[] {
     const result: OrgMember[] = [];
-    const queue = this.directReports(id);
-    while (queue.length > 0) {
-      const member = queue.shift();
+    // Use a stack with an index pointer — avoids O(n) array.shift()
+    const stack = this.directReports(id);
+    let i = 0;
+    while (i < stack.length) {
+      const member = stack[i];
+      i++;
       if (!member) continue;
       result.push(member);
-      queue.push(...this.directReports(member.id));
+      const reports = this.directReports(member.id);
+      for (const r of reports) stack.push(r);
     }
     return result;
   }
@@ -115,7 +126,17 @@ export class OrgTree {
   /** Members at a specific depth from the root (0 = roots). */
   atDepth(depth: number): OrgMember[] {
     if (depth === 0) return this.roots;
-    return this.active.filter((m) => this.pathTo(m.id).length - 1 === depth);
+    // BFS from roots — O(n) total instead of O(n × depth) with pathTo per member
+    let current = this.roots;
+    for (let d = 0; d < depth; d++) {
+      const next: OrgMember[] = [];
+      for (const m of current) {
+        for (const r of this.directReports(m.id)) next.push(r);
+      }
+      current = next;
+      if (current.length === 0) return [];
+    }
+    return current;
   }
 
   /** Total active headcount. */
@@ -125,7 +146,10 @@ export class OrgTree {
 
   /** Snapshot the current state (for caching / serialisation). */
   get snapshot(): OrgTreeState {
-    return { members: new Map(this.state.members) };
+    return {
+      members: new Map(this.state.members),
+      reportIndex: new Map([...this.state.reportIndex.entries()].map(([k, v]) => [k, new Set(v)])),
+    };
   }
 
   // ─── Event builders ────────────────────────────────────────────────────────

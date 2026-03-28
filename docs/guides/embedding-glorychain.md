@@ -88,7 +88,7 @@ const result = createChain(
     creatorId: "deploy-bot@company.com",
     identityType: "anonymous",
     publicKey: PUBLIC_KEY,
-    schema: KeyValueStore.genesisSchema,
+    contentSchema: KeyValueStore.genesisSchema,
   },
   PRIVATE_KEY,
 )
@@ -231,13 +231,13 @@ app.get("/audit/chain", async (req, res) => {
 })
 ```
 
-Your customer runs:
+Your customer downloads the exported JSON and verifies locally:
 
 ```bash
-glorychain verify --chain <chainId> --url https://yourapp.com/audit/chain
+glorychain verify --chain <chainId> --dir ./downloaded-chains
 ```
 
-Or downloads the JSON and verifies locally — no dependency on your infrastructure.
+No dependency on your infrastructure — verification is fully self-contained.
 
 ---
 

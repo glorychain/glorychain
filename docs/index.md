@@ -17,6 +17,9 @@ If you're new, start with [why glorychain exists](why-glorychain.md). If you wan
 **I want to see real-world examples**
 → [Use cases](use-cases.md)
 
+**I want runnable code examples**
+→ [examples/](../examples/README.md)
+
 **I want to set up an audit trail for my GitHub repo**
 → [Self-hosted chain guide](guides/self-hosted-chain.md)
 

@@ -10,13 +10,15 @@ import type { Chain, Connector, ThreatEvent, VerificationResult } from "@glorych
 import { migrateChain, verifyChain } from "@glorychain/core";
 
 export interface S3ConnectorConfig {
+  /** S3 bucket name. */
   bucket: string;
-  /** Key prefix. Default: "chains" */
+  /** Key prefix for chain objects. Default: "chains" */
   prefix?: string;
   /** AWS region. Use "auto" for Cloudflare R2. Default: "us-east-1" */
   region?: string;
   /** Custom endpoint URL — required for R2, MinIO, Backblaze B2 */
   endpoint?: string;
+  /** AWS credentials. Uses SDK credential chain if omitted. */
   credentials?: {
     accessKeyId: string;
     secretAccessKey: string;
@@ -80,7 +82,6 @@ export class S3Connector implements Connector {
   async list(): Promise<string[]> {
     const chainIds: string[] = [];
     let continuationToken: string | undefined;
-
     do {
       const response = await this.client.send(
         new ListObjectsV2Command({
@@ -89,18 +90,13 @@ export class S3Connector implements Connector {
           ContinuationToken: continuationToken,
         }),
       );
-
       for (const obj of response.Contents ?? []) {
         if (!obj.Key) continue;
         const name = obj.Key.slice(`${this.prefix}/`.length);
-        if (name.endsWith(".json")) {
-          chainIds.push(name.slice(0, -5));
-        }
+        if (name.endsWith(".json")) chainIds.push(name.slice(0, -5));
       }
-
       continuationToken = response.NextContinuationToken;
     } while (continuationToken);
-
     return chainIds;
   }
 

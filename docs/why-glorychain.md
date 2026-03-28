@@ -57,7 +57,7 @@ It also does not:
 
 Public blockchains are designed for trustless value transfer between adversarial parties. They are expensive, slow, and complex for most institutional use cases.
 
-glorychain is designed for **institutional record-keeping** — a fundamentally different problem. It uses the same cryptographic primitives (signing, hashing) but with a much simpler architecture: a single chain, a single signer (or a defined set of signers), and a storage backend you control.
+glorychain is **blockchain for general-purpose use** — the same cryptographic primitives (signing, hashing, append-only history) applied to a fundamentally different problem: institutional record-keeping. The architecture is much simpler: a single chain, a single signer (or a defined set of signers), and a storage backend you control. No network. No tokens. No consensus protocol.
 
 The result is a system you can run with a single CLI command, store in a GitHub repository, and verify with no internet connection.
 

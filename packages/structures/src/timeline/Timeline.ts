@@ -8,7 +8,7 @@ import type {
   TimelineState,
 } from "./types.js";
 
-const EMPTY_STATE: TimelineState = { entries: new Map() };
+const EMPTY_STATE: TimelineState = { entries: new Map(), activeTags: new Map() };
 
 function parseTimelineEvent(content: string): TimelineEvent | null {
   const parsed = parseJson<TimelineEvent>(content);
@@ -17,38 +17,59 @@ function parseTimelineEvent(content: string): TimelineEvent | null {
   return parsed;
 }
 
+function tagIncrement(activeTags: Map<string, number>, tags: string[]): Map<string, number> {
+  const next = new Map(activeTags);
+  for (const tag of tags) next.set(tag, (next.get(tag) ?? 0) + 1);
+  return next;
+}
+
+function tagDecrement(activeTags: Map<string, number>, tags: string[]): Map<string, number> {
+  const next = new Map(activeTags);
+  for (const tag of tags) {
+    const count = (next.get(tag) ?? 0) - 1;
+    if (count <= 0) next.delete(tag);
+    else next.set(tag, count);
+  }
+  return next;
+}
+
 function timelineReducer(
   state: TimelineState,
   event: TimelineEvent,
   blockNumber: number,
 ): TimelineState {
   const entries = new Map(state.entries);
+  let activeTags = state.activeTags;
 
   switch (event.type) {
-    case "ENTRY":
+    case "ENTRY": {
+      const tags = event.tags ?? [];
       entries.set(event.id, {
         id: event.id,
         title: event.title,
         body: event.body ?? null,
-        tags: event.tags ?? [],
+        tags,
         date: event.date ?? null,
         retracted: false,
         addedAtBlock: blockNumber,
         retractedAtBlock: null,
         metadata: event.metadata ?? {},
       });
+      activeTags = tagIncrement(activeTags, tags);
       break;
+    }
 
     case "RETRACT": {
       const e = entries.get(event.id);
-      if (e) {
+      if (e && !e.retracted) {
         entries.set(event.id, { ...e, retracted: true, retractedAtBlock: blockNumber });
+        activeTags = tagDecrement(activeTags, e.tags);
       }
       break;
     }
   }
 
-  return { entries };
+  return { entries, activeTags };
 }
 
 /**
@@ -100,16 +121,13 @@ export class Timeline {
   }
 
   byTag(tag: string): TimelineEntry[] {
+    if (!this.state.activeTags.has(tag)) return [];
     return this.active.filter((e) => e.tags.includes(tag));
   }
 
-  /** All unique tags across active entries. */
+  /** All unique tags across active entries. O(t) where t = distinct tag count. */
   get tags(): string[] {
-    const set = new Set<string>();
-    for (const entry of this.active) {
-      for (const tag of entry.tags) set.add(tag);
-    }
-    return [...set].sort();
+    return [...this.state.activeTags.keys()].sort();
   }
 
   get count(): number {
@@ -117,7 +135,10 @@ export class Timeline {
   }
 
   get snapshot(): TimelineState {
-    return { entries: new Map(this.state.entries) };
+    return {
+      entries: new Map(this.state.entries),
+      activeTags: new Map(this.state.activeTags),
+    };
   }
 
   // ─── Event builders ────────────────────────────────────────────────────────

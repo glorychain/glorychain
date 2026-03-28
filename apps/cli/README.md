@@ -2,12 +2,8 @@
 
 > Full chain lifecycle management from your terminal. No server required.
 
-The glorychain CLI is a thin, powerful wrapper over `@glorychain/core` — create and manage chains, generate keypairs, verify integrity, export feeds, scaffold GitHub repos, and produce block templates. Everything works completely locally with no service dependency.
-
 ```bash
-npm install -g @glorychain/cli
-# or run without installing
-npx @glorychain/cli --help
+npm install -g glorychain
 ```
 
 ---
@@ -20,15 +16,17 @@ glorychain keygen
 
 # 2. Create a chain
 glorychain create \
-  --name "My Organisation Decisions" \
-  --purpose "Public tamper-evident record of all governance decisions" \
-  --key $PRIVATE_KEY
+  --key $PRIVATE_KEY \
+  --pubkey $PUBLIC_KEY \
+  --content "My Organisation Board Decisions" \
+  --purpose "governance"
 
 # 3. Append your first real block
 glorychain append \
   --chain <chainId> \
-  --content "Board meeting 2026-03-22: approved new budget. Motion: Jane Smith." \
-  --key $PRIVATE_KEY
+  --key $PRIVATE_KEY \
+  --pubkey $PUBLIC_KEY \
+  --content "Board meeting 2026-03-22: approved new budget. Motion: Jane Smith."
 
 # 4. Verify the whole chain
 glorychain verify --chain <chainId>
@@ -38,189 +36,157 @@ glorychain verify --chain <chainId>
 
 ## Commands
 
-### Chain lifecycle
+### `keygen`
 
-```bash
-# Create a new chain with a genesis block
-glorychain create \
-  --name    "Chain name" \
-  --purpose "What this chain records" \
-  --key     <privateKey>
-
-# Append a new signed block
-glorychain append \
-  --chain   <chainId> \
-  --content "Block content" \
-  --key     <privateKey>
-
-# Fork a chain from a specific block
-glorychain fork \
-  --chain       <chainId> \
-  --fork-at     <blockNumber> \
-  --content     "Reason for fork" \
-  --key         <privateKey>
-```
-
-**Forking** preserves the full original history up to the fork point, then diverges. Use it when a chain has been compromised, a project splits, or a community wants to preserve a point-in-time snapshot. A fork creates visible lineage — it's not an attack, it's evidence.
-
----
-
-### Inspection
-
-```bash
-# Pretty-print full chain details
-glorychain inspect --chain <chainId>
-
-# Inspect a specific block
-glorychain inspect --chain <chainId> --block 5
-
-# Verify all signatures and hash linkages
-glorychain verify --chain <chainId>
-
-# Export as RSS or Atom feed
-glorychain export --chain <chainId> --format rss  > feed.xml
-glorychain export --chain <chainId> --format atom > feed.xml
-```
-
-`inspect` output includes:
-
-```
-Chain: My Organisation Decisions
-  ID:       3e7c9f2a-1234-...
-  Blocks:   14
-  Created:  2026-01-15T09:00:00Z
-  Latest:   2026-03-22T14:30:00Z
-
-Block 0 (genesis)
-  Author:    MCowBQYDK2V...
-  Timestamp: 2026-01-15T09:00:00Z
-  Hash:      a3f9c2...
-  Content:   "Public record of all board decisions..."
-
-Block 1
-  Author:    MCowBQYDK2V...
-  Timestamp: 2026-01-22T11:15:00Z
-  Hash:      b7e4a1...
-  PrevHash:  a3f9c2... ✓
-  Signature: ✓
-  Content:   "Approved Q1 budget..."
-```
-
----
-
-### Key management
+Generate an Ed25519 keypair.
 
 ```bash
 glorychain keygen
 ```
 
-Generates a new Ed25519 keypair. Output is preceded by a mandatory custody warning — this is not optional and cannot be suppressed.
+Output: `publicKey` and `privateKey` (base64url). Store your private key securely — it cannot be recovered.
 
-```
-⚠️  PRIVATE KEY CUSTODY WARNING
-Your private key is the only way to sign blocks on this chain.
-If you lose it, you permanently lose the ability to append.
-If it leaks, anyone who holds it can impersonate you.
-Store it in a password manager or secrets vault. Never commit it to version control.
+---
 
-Public key:  MCowBQYDK2VwBCAA...
-Private key: MC4CAQAwBQYDK2Vw...
+### `create`
+
+Create a new chain.
+
+```bash
+glorychain create \
+  --key <privateKey> \
+  --pubkey <publicKey> \
+  --content "Genesis block content" \
+  [--purpose "governance"] \
+  [--creator "alice@example.com"] \
+  [--dir ./chains]
 ```
 
 ---
 
-### GitHub repo scaffolding
+### `append`
+
+Append a block to an existing chain.
+
+```bash
+glorychain append \
+  --chain <chainId> \
+  --key <privateKey> \
+  --pubkey <publicKey> \
+  --content "Block content" \
+  [--dir ./chains]
+```
+
+---
+
+### `verify`
+
+Verify the integrity of a chain.
+
+```bash
+glorychain verify --chain <chainId> [--dir ./chains]
+```
+
+Checks: hash continuity, signatures, block sequence, timestamp validity, schema conformance.
+
+---
+
+### `inspect`
+
+Display the contents of a specific block.
+
+```bash
+glorychain inspect --chain <chainId> --block <n> [--dir ./chains] [--json]
+```
+
+`--block` is required. Use `0` for the genesis block.
+
+---
+
+### `fork`
+
+Fork a chain from a given block.
+
+```bash
+glorychain fork \
+  --chain <chainId> \
+  --block <n> \
+  --key <newPrivateKey> \
+  --pubkey <newPublicKey> \
+  --content "Fork genesis content" \
+  [--purpose fork] \
+  [--dir ./chains]
+```
+
+Forking preserves the original chain intact. The new chain carries provenance — it knows where it came from. Use it when a signing key is compromised or a governance change requires a new signer.
+
+---
+
+### `migrate`
+
+Migrate a chain from one directory to another.
+
+```bash
+glorychain migrate \
+  --chain <chainId> \
+  --from ./chains \
+  --to ./archive
+```
+
+---
+
+### `feed`
+
+Generate an Atom 1.0 feed of a chain.
+
+```bash
+glorychain feed --chain <chainId> [--dir ./chains] [--base-url <url>]
+```
+
+---
+
+### `export`
+
+Export a chain to a JSON file.
+
+```bash
+glorychain export --chain <chainId> [--out ./export.json] [--dir ./chains]
+```
+
+---
+
+### `init`
+
+Initialise a directory for use with glorychain.
 
 ```bash
 glorychain init \
-  --owner my-org \
-  --repo  my-repo \
-  --token $GITHUB_TOKEN \
-  [--branch main] \
   [--dir chains] \
-  [--json]
+  [--preset <preset>] \
+  [--github] \
+  [--content "Genesis content"] \
+  [--key <key>] \
+  [--pubkey <pubkey>]
 ```
 
-Writes the standard glorychain file structure to a GitHub repository:
+With `--preset`: populates `CHAIN_CHARTER.md` with a ready-to-use charter for a specific chain type. Available presets: `governance`, `board-decisions`, `audit-log`, `policy-register`, `membership-register`.
 
-- CI workflow that verifies chain integrity on every push and PR
-- PR and issue templates for block submission
-- `CHAIN_CHARTER.md` governance template
-- `CONTRIBUTING.md` delegating policy to the charter
-- `.glorychain.json` config for subsequent CLI commands
+With `--github`: scaffolds `.github/workflows/chain-genesis.yml` and `chain-append.yml`. Requires `CHAIN_PRIVATE_KEY` and `CHAIN_PUBLIC_KEY` repo secrets.
 
-Add `--json` to get machine-readable output for scripting.
+With `--content`: also creates the genesis block immediately.
 
 ---
 
-### Templates
+### `template`
+
+Show usage templates.
 
 ```bash
-# Generate a block submission template
-glorychain template --type block [--title "Q2 2026 Budget Approval"] [--out block.md]
-
-# Generate an architecture decision record template
-glorychain template --type adr   [--title "Use PostgreSQL for SaaS"] [--out adr-001.md]
+glorychain template
 ```
-
-Templates are Markdown stubs — fill them in, then pass the content to `glorychain append`.
 
 ---
 
-## Config file
+## Full reference
 
-After running `glorychain init`, a `.glorychain.json` is written to your project root:
-
-```json
-{
-  "owner":  "my-org",
-  "repo":   "my-repo",
-  "branch": "main",
-  "dir":    "chains"
-}
-```
-
-The CLI reads this automatically. If you're inside a scaffolded repo, you don't need to pass `--owner` / `--repo` flags.
-
----
-
-## Use case: publishing an NGO's governance chain
-
-```bash
-# One-time setup
-glorychain keygen  # save the private key to your password manager
-glorychain init --owner acme-ngo --repo governance --token $GITHUB_TOKEN
-
-# Embed the charter as the genesis block
-glorychain create \
-  --name    "Acme NGO Board Decisions" \
-  --content "$(cat CHAIN_CHARTER.md)" \
-  --key     $PRIVATE_KEY
-
-# Append decisions after every board meeting
-glorychain append \
-  --chain <chainId> \
-  --content "$(cat 2026-03-22-meeting-minutes.md)" \
-  --key $PRIVATE_KEY
-
-# Verify integrity at any time
-glorychain verify --chain <chainId>
-```
-
-The chain is now on GitHub, CI-verified on every push, exportable as RSS, and citable from any article or report.
-
----
-
-## Use the conformance suite
-
-After creating a chain, run the conformance suite to verify it meets the full protocol spec:
-
-```bash
-pnpm --filter @glorychain/conformance exec conformance run \
-  --connector github \
-  --owner my-org \
-  --repo  my-repo \
-  --chain <chainId>
-```
-
-See [`apps/conformance`](../conformance/README.md) for full documentation.
+See [docs/reference/cli-reference.md](../../docs/reference/cli-reference.md) for the complete flag reference for every command.

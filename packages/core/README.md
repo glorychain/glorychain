@@ -2,7 +2,7 @@
 
 > The glorychain protocol library. Pure computation, no I/O, zero runtime dependencies.
 
-This is the foundation everything else builds on. Chain lifecycle, cryptographic operations, block construction, integrity verification, and RSS/Atom feed generation — all as pure functions that return typed Results.
+This is the foundation everything else builds on. Chain lifecycle, cryptographic operations, block construction, integrity verification, and Atom feed generation — all as pure functions that return typed Results.
 
 ```bash
 npm install @glorychain/core
@@ -57,16 +57,19 @@ import { createChain } from "@glorychain/core";
 
 const result = createChain(
   {
-    name: "Acme NGO Governance Decisions",
-    purpose: "Public tamper-evident record of all board-level decisions",
+    content:      "Public tamper-evident record of all board-level decisions",
+    purpose:      "Governance",
+    creatorId:    "user-123",
+    identityType: "oauth",
+    publicKey,
   },
   privateKey,
 );
 
 if (!result.ok) throw result.error;
 const chain = result.value;
-// chain.id         — UUID, stable forever
-// chain.blocks[0]  — genesis block, signed with your key
+// chain.metadata.chainId  — UUID, stable forever
+// chain.blocks[0]         — genesis block, signed with your key
 ```
 
 ### `appendBlock`
@@ -102,10 +105,14 @@ import { forkChain } from "@glorychain/core";
 
 const result = forkChain(
   originalChain,
+  12,  // preserve blocks 0–12, diverge from here
   {
-    forkAtBlock: 12,  // preserve blocks 0–12, diverge from here
-    content: "Fork created — original chain administrator lost private key on 2026-03-01",
+    content:      "Fork created — original chain administrator lost private key on 2026-03-01",
+    purpose:      "Governance",
+    creatorId:    "user-123",
+    identityType: "oauth",
     publicKey,
+    forkReason:   "Key compromise",
   },
   privateKey,
 );
@@ -120,11 +127,7 @@ Migration moves a chain to a new persistence layer. It's a last resort — every
 ```typescript
 import { migrateChain } from "@glorychain/core";
 
-const result = migrateChain(chain, {
-  connector: "github",
-  owner: "my-org",
-  repo:  "my-repo",
-});
+const result = migrateChain(chain, targetConnector);
 ```
 
 ---
@@ -134,18 +137,18 @@ const result = migrateChain(chain, {
 ```typescript
 import { verifyChain } from "@glorychain/core";
 
-const result = verifyChain(chain);
+const result = await verifyChain(chain);
 
-console.log(result.valid);           // true | false
-console.log(result.blockCount);      // number of blocks verified
+console.log(result.valid);             // true | false
+console.log(result.blockCount);        // number of blocks verified
 console.log(result.lastVerifiedBlock); // index of last passing block
-console.log(result.errors);          // array of VerificationError — empty if valid
+console.log(result.errors);            // array of VerificationError — empty if valid
 ```
 
 Verification is **deterministic** — same chain, same blocks, same result, always, on any runtime. It checks:
 
 - Every block's `previousHash` matches the prior block's SHA-256 hash
-- Every block signature is valid against its `authorPublicKey`
+- Every block signature is valid against its `publicKey`
 - Exactly one genesis block exists at position 0
 - Block numbers are monotonically increasing
 - Every block conforms to the protocol Zod schema
@@ -155,12 +158,14 @@ Verification is **deterministic** — same chain, same blocks, same result, alwa
 ## Block inspection
 
 ```typescript
-import { getBlock, getBlockCount, getGenesisBlock, getLatestBlock } from "@glorychain/core";
+import { inspectBlock } from "@glorychain/core";
 
-const genesis  = getGenesisBlock(chain);   // Block | undefined
-const latest   = getLatestBlock(chain);    // Block | undefined
-const block5   = getBlock(chain, 5);       // Block | undefined
-const count    = getBlockCount(chain);     // number
+const genesis = chain.blocks[0];          // GenesisBlock
+const latest  = chain.blocks.at(-1);      // Block
+const block5  = chain.blocks[5];          // Block | undefined
+const count   = chain.blocks.length;      // number
+
+const { type, block } = inspectBlock(chain.blocks[0]);
 ```
 
 ---
@@ -172,11 +177,10 @@ Every chain exposes a standard feed. The open web — including the Internet Arc
 ```typescript
 import { generateFeed } from "@glorychain/core";
 
-const rss  = generateFeed(chain, { format: "rss"  });  // RSS 2.0 XML string
-const atom = generateFeed(chain, { format: "atom" });  // Atom 1.0 XML string
+const atom = generateFeed(chain, { baseUrl: "https://example.com" });  // Atom 1.0 XML string
 ```
 
-The feed is valid and parseable by any standard RSS reader. Subscribers get new block notifications without polling your server.
+The feed is valid and parseable by any standard feed reader. Subscribers get new block notifications without polling your server.
 
 ---
 
@@ -188,10 +192,14 @@ For integrators building custom connectors or tooling:
 import { signBlock, verifyBlock } from "@glorychain/core";
 
 // Sign raw block data
-const signature = await signBlock(blockData, privateKey);
+const signResult = signBlock(blockData, privateKey);
+if (!signResult.ok) throw signResult.error;
+const signature = signResult.value;  // string
 
 // Verify a single block
-const isValid = await verifyBlock(block);
+const verifyResult = verifyBlock(block);
+if (!verifyResult.ok) throw verifyResult.error;
+const isValid = verifyResult.value;  // boolean
 ```
 
 ---
@@ -201,6 +209,7 @@ const isValid = await verifyBlock(block);
 ```typescript
 import type {
   Chain,
+  ChainMetadata,
   Block,
   GenesisBlock,
   CreateChainInput,
@@ -227,20 +236,29 @@ type Result<T, E = GloryChainError> =
 
 ```typescript
 type Block = {
-  blockNumber:     number;      // 0 = genesis, monotonically increasing
-  content:         string;      // arbitrary UTF-8 content
-  authorPublicKey: string;      // base64url SPKI Ed25519 public key
-  signature:       string;      // base64url Ed25519 signature
-  previousHash:    string | null; // null for genesis block only
-  hash:            string;      // SHA-256 of canonical block content
-  timestamp:       string;      // ISO 8601
+  blockNumber:  number;         // 0 = genesis, monotonically increasing
+  content:      string;         // arbitrary UTF-8 content
+  publicKey:    string;         // base64url SPKI Ed25519 public key
+  signature:    string;         // base64url Ed25519 signature
+  previousHash: string | null;  // null for genesis block only
+  hash:         string;         // SHA-256 of canonical block content
+  timestamp:    string;         // ISO 8601
+};
+
+type ChainMetadata = {
+  chainId:          string;   // UUID
+  createdAt:        string;   // ISO 8601
+  protocolVersion:  string;   // e.g. "0.0.1"
+  hashAlgorithm:    string;
+  signatureScheme:  string;
+  migrationHistory: unknown[];
+  knownForks:       unknown[];
+  transferHistory:  unknown[];
 };
 
 type Chain = {
-  id:        string;   // UUID
-  name:      string;
-  createdAt: string;   // ISO 8601
-  blocks:    Block[];
+  metadata: ChainMetadata;
+  blocks:   [GenesisBlock, ...Block[]];
 };
 ```
 
@@ -249,13 +267,18 @@ type Chain = {
 ## Error types
 
 ```typescript
-type GloryChainError =
-  | { code: "INVALID_KEY";        message: string }
-  | { code: "INVALID_SIGNATURE";  message: string }
-  | { code: "HASH_MISMATCH";      message: string; blockNumber: number }
-  | { code: "INVALID_SCHEMA";     message: string }
-  | { code: "EMPTY_CHAIN";        message: string }
-  | { code: "CRYPTO_UNAVAILABLE"; message: string };
+import { ErrorCode } from "@glorychain/core";
+
+// ErrorCode enum values include:
+// ErrorCode.INVALID_SIGNATURE
+// ErrorCode.BROKEN_CHAIN
+// ErrorCode.INVALID_HASH
+// ErrorCode.SCHEMA_VIOLATION
+
+type GloryChainError = {
+  code:    ErrorCode;
+  message: string;
+};
 ```
 
 ---
@@ -266,9 +289,12 @@ type GloryChainError =
 
 ```typescript
 interface Connector {
+  version: string;
   read(chainId: string): Promise<Chain>;
-  write(chainId: string, chain: Chain): Promise<void>;
-  watch(chainId: string): AsyncIterable<ConnectorEvent>;
+  write(chain: Chain): Promise<void>;
+  watch(chainId: string): AsyncIterable<ThreatEvent>;
+  migrate(chainId: string, target: Connector): Promise<void>;
+  verify(chainId: string): Promise<VerificationResult>;
 }
 ```
 

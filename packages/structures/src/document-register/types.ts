@@ -54,4 +54,6 @@ export interface Document {
 
 export interface DocumentRegisterState {
   documents: Map<string, Document>;
+  /** Index for O(1) lookup by content hash. */
+  hashIndex: Map<string, string>;
 }
