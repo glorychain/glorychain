@@ -14,7 +14,7 @@ export interface AppointEvent {
   id: string; // unique identifier (e.g. email, employee ID)
   name: string;
   role: string;
-  reportsTo: string | null; // null = root / no manager
+  reportsTo: number | null; // block number of manager's APPOINT event; null = root / no manager
   metadata?: Record<string, string>;
 }
 
@@ -29,13 +29,13 @@ export interface PromoteEvent {
   type: "PROMOTE";
   id: string;
   role: string; // new role
-  reportsTo?: string; // if reporting line also changes
+  reportsTo?: number; // block number of new manager's APPOINT event, if reporting line also changes
 }
 
 export interface TransferEvent {
   type: "TRANSFER";
   id: string;
-  reportsTo: string; // new manager id
+  reportsTo: number; // block number of new manager's APPOINT event
 }
 
 export interface RenameEvent {
@@ -70,7 +70,7 @@ export interface OrgMember {
   id: string;
   name: string;
   role: string;
-  reportsTo: string | null;
+  reportsTo: number | null; // block number of manager's APPOINT event; null = root / no manager
   active: boolean;
   suspended: boolean;
   appointedAtBlock: number;
@@ -80,6 +80,6 @@ export interface OrgMember {
 
 export interface OrgTreeState {
   members: Map<string, OrgMember>;
-  /** Reverse index: managerId → Set of active direct report IDs. */
-  reportIndex: Map<string | null, Set<string>>;
+  /** Reverse index: manager's appointedAtBlock (or null for roots) → Set of active direct report IDs. */
+  reportIndex: Map<number | null, Set<string>>;
 }

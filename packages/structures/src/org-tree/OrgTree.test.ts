@@ -37,38 +37,41 @@ function makeChain(events: string[]): Chain {
 
 describe("OrgTree", () => {
   it("builds tree from APPOINT events", () => {
+    // sarah=block 1, james=block 2, liu=block 3
     const chain = makeChain([
       OrgTree.appoint({ id: "sarah", name: "Sarah Chen", role: "CEO", reportsTo: null }),
-      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: "sarah" }),
-      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: "james" }),
+      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: 1 }),
+      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: 2 }),
     ]);
 
     const tree = OrgTree.fromChain(chain);
 
     expect(tree.get("sarah")).toMatchObject({ name: "Sarah Chen", role: "CEO", reportsTo: null });
-    expect(tree.get("james")).toMatchObject({ reportsTo: "sarah" });
+    expect(tree.get("james")).toMatchObject({ reportsTo: 1 });
     expect(tree.headcount).toBe(3);
   });
 
   it("removes member on DEPART and reassigns reports", () => {
+    // sarah=block 1, james=block 2, liu=block 3
     const chain = makeChain([
       OrgTree.appoint({ id: "sarah", name: "Sarah Chen", role: "CEO", reportsTo: null }),
-      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: "sarah" }),
-      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: "james" }),
+      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: 1 }),
+      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: 2 }),
       OrgTree.depart({ id: "james", reason: "resigned", handoverTo: "sarah" }),
     ]);
 
     const tree = OrgTree.fromChain(chain);
 
     expect(tree.get("james")?.active).toBe(false);
-    expect(tree.get("liu")?.reportsTo).toBe("sarah");
+    expect(tree.get("liu")?.reportsTo).toBe(1); // now reports to sarah (block 1)
     expect(tree.headcount).toBe(2);
   });
 
   it("promotes a member", () => {
+    // sarah=block 1, liu=block 2
     const chain = makeChain([
       OrgTree.appoint({ id: "sarah", name: "Sarah Chen", role: "CEO", reportsTo: null }),
-      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: "sarah" }),
+      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: 1 }),
       OrgTree.promote({ id: "liu", role: "Principal Engineer" }),
     ]);
 
@@ -77,14 +80,15 @@ describe("OrgTree", () => {
   });
 
   it("returns correct directReports", () => {
+    // sarah=block 1, james=block 2, priya=block 3
     const chain = makeChain([
       OrgTree.appoint({ id: "sarah", name: "Sarah Chen", role: "CEO", reportsTo: null }),
-      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: "sarah" }),
+      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: 1 }),
       OrgTree.appoint({
         id: "priya",
         name: "Priya Sharma",
         role: "VP Product",
-        reportsTo: "sarah",
+        reportsTo: 1,
       }),
     ]);
 
@@ -94,10 +98,11 @@ describe("OrgTree", () => {
   });
 
   it("returns correct pathTo", () => {
+    // sarah=block 1, james=block 2, liu=block 3
     const chain = makeChain([
       OrgTree.appoint({ id: "sarah", name: "Sarah Chen", role: "CEO", reportsTo: null }),
-      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: "sarah" }),
-      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: "james" }),
+      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: 1 }),
+      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: 2 }),
     ]);
 
     const tree = OrgTree.fromChain(chain);
@@ -106,11 +111,12 @@ describe("OrgTree", () => {
   });
 
   it("returns subtree recursively", () => {
+    // sarah=block 1, james=block 2, liu=block 3, ana=block 4
     const chain = makeChain([
       OrgTree.appoint({ id: "sarah", name: "Sarah Chen", role: "CEO", reportsTo: null }),
-      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: "sarah" }),
-      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: "james" }),
-      OrgTree.appoint({ id: "ana", name: "Ana Costa", role: "Engineer", reportsTo: "liu" }),
+      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: 1 }),
+      OrgTree.appoint({ id: "liu", name: "Liu Wei", role: "Staff Engineer", reportsTo: 2 }),
+      OrgTree.appoint({ id: "ana", name: "Ana Costa", role: "Engineer", reportsTo: 3 }),
     ]);
 
     const tree = OrgTree.fromChain(chain);
@@ -142,11 +148,12 @@ describe("OrgTree", () => {
   });
 
   it("skips non-org-event blocks gracefully", () => {
+    // sarah=block 1, james=block 4
     const chain = makeChain([
       OrgTree.appoint({ id: "sarah", name: "Sarah Chen", role: "CEO", reportsTo: null }),
       "not json at all",
       '{"type":"UNKNOWN","id":"x"}',
-      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: "sarah" }),
+      OrgTree.appoint({ id: "james", name: "James Okafor", role: "VP Eng", reportsTo: 1 }),
     ]);
 
     const tree = OrgTree.fromChain(chain);
