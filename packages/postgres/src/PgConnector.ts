@@ -163,10 +163,9 @@ export class PgConnector implements Connector {
   }
 
   async exists(chainId: string): Promise<boolean> {
-    const result = await this.pool.query(
-      `SELECT 1 FROM ${this.chainsTable} WHERE chain_id = $1`,
-      [chainId],
-    );
+    const result = await this.pool.query(`SELECT 1 FROM ${this.chainsTable} WHERE chain_id = $1`, [
+      chainId,
+    ]);
     return result.rows.length > 0;
   }
 
