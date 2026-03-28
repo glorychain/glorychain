@@ -26,7 +26,7 @@ const createResult = createChain(
     creatorId: "governance@glorychain.io",
     identityType: "anonymous",
     publicKey,
-    schema: VoteRegister.genesisSchema,
+    contentSchema: VoteRegister.genesisSchema,
   },
   privateKey,
 );

@@ -74,7 +74,7 @@ These guide every decision about what to build and what to decline:
 
 ## Protocol stability
 
-The protocol is at `v0.1`. The spec is stable enough to build on but may have breaking changes before `v1.0`. We will:
+The protocol is at `v0.0.1`. The spec is stable enough to build on but may have breaking changes before `v1.0`. We will:
 - Announce breaking changes with a major version bump
 - Maintain a migration guide for each breaking change
 - Keep the conformance suite updated so independent implementations can verify compatibility

@@ -15,20 +15,20 @@ This package is the single source of truth for input shapes. The same validators
 ## Chain validators
 
 ```typescript
-import { CreateChainSchema, AppendBlockSchema, ForkChainSchema } from "@glorychain/shared";
-import type { CreateChainInput, AppendBlockInput, ForkChainInput } from "@glorychain/shared";
+import { CreateChainSchema, AppendBlockSchema } from "@glorychain/shared";
+import type { CreateChainInput, AppendBlockInput } from "@glorychain/shared";
 
 // Validate input before creating a chain
 const input = CreateChainSchema.parse({
-  name:    "Acme NGO Board Decisions",
-  purpose: "Tamper-evident public record of all governance decisions",
+  purpose:      "Tamper-evident public record of all governance decisions",
+  identityType: "anonymous",  // "oauth" | "external" | "anonymous"
 });
 
 // Validate input before appending a block
 const appendInput = AppendBlockSchema.parse({
   chainId:   "3e7c9f2a-...",
   content:   "Motion passed: Approve 2026 budget. Votes: 7 for, 0 against.",
-  publicKey: "MCowBQYDK2V...",
+  timestamp: new Date().toISOString(),
 });
 ```
 
@@ -39,20 +39,14 @@ const appendInput = AppendBlockSchema.parse({
 The SaaS platform supports a suggestion workflow — anyone can propose a block for a chain; the chain owner approves or rejects it.
 
 ```typescript
-import { SubmitSuggestionSchema, ReviewSuggestionSchema } from "@glorychain/shared";
-import type { SubmitSuggestionInput, ReviewSuggestionInput } from "@glorychain/shared";
+import { SubmitSuggestionSchema } from "@glorychain/shared";
+import type { SubmitSuggestionInput } from "@glorychain/shared";
 
 // Submit a suggestion (public — no auth required)
 const suggestion = SubmitSuggestionSchema.parse({
-  chainId:          "3e7c9f2a-...",
-  proposedContent:  "Proposed board resolution: ...",
-  proposerPublicKey: "MCowBQYDK2V...",
-});
-
-// Review a suggestion (chain owner only)
-const review = ReviewSuggestionSchema.parse({
-  suggestionId: "abc123",
-  action:       "approved",  // "approved" | "rejected"
+  chainSlug:     "acme-ngo-board-resolutions",
+  content:       "Proposed board resolution: ...",
+  submitterNote: "From the finance committee.",  // optional
 });
 ```
 
@@ -65,20 +59,16 @@ const review = ReviewSuggestionSchema.parse({
 export {
   CreateChainSchema,
   AppendBlockSchema,
-  ForkChainSchema,
-  MigrateChainSchema,
+  ContentSchemaDefinitionSchema,
   SubmitSuggestionSchema,
-  ReviewSuggestionSchema,
 };
 
 // Types (derived from schemas via z.infer)
 export type {
   CreateChainInput,
   AppendBlockInput,
-  ForkChainInput,
-  MigrateChainInput,
+  ContentSchemaDefinition,
   SubmitSuggestionInput,
-  ReviewSuggestionInput,
 };
 ```
 

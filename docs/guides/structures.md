@@ -51,7 +51,7 @@ const chain = createChain(
     creatorId: "coo@acme.com",
     identityType: "anonymous",
     publicKey,
-    schema: OrgTree.genesisSchema,  // enforces all blocks are valid OrgEvents
+    contentSchema: OrgTree.genesisSchema,  // enforces all blocks are valid OrgEvents
   },
   privateKey,
 )
@@ -165,7 +165,7 @@ const chain = createChain(
     creatorId: "deploy-bot@company.com",
     identityType: "anonymous",
     publicKey,
-    schema: KeyValueStore.genesisSchema,
+    contentSchema: KeyValueStore.genesisSchema,
   },
   privateKey,
 )
@@ -233,7 +233,7 @@ const chain = createChain(
     creatorId: "board.chair@acme-aid.org",
     identityType: "anonymous",
     publicKey,
-    schema: MemberSet.genesisSchema,
+    contentSchema: MemberSet.genesisSchema,
   },
   privateKey,
 )
@@ -315,7 +315,7 @@ const chain = createChain(
     creatorId: "governance@protocol.org",
     identityType: "anonymous",
     publicKey,
-    schema: VoteRegister.genesisSchema,
+    contentSchema: VoteRegister.genesisSchema,
   },
   privateKey,
 )
@@ -347,13 +347,13 @@ await appendBlock(chain, { content: VoteRegister.cast({
 
 // Close the motion
 await appendBlock(chain, { content: VoteRegister.close({
-  id: "motion-001",
+  motionId: "motion-001",
   outcome: "passed",
 }), publicKey }, privateKey)
 
 // Withdraw an open motion
 await appendBlock(chain, { content: VoteRegister.withdraw({
-  id: "motion-002",
+  motionId: "motion-002",
   reason: "superseded by motion-003",
 }), publicKey }, privateKey)
 ```
@@ -368,8 +368,8 @@ register.tally("motion-001")         // { yes: 1, no: 1, abstain: 0, total: 2 }
 register.voters("motion-001")        // string[] — voter IDs
 register.all                         // Motion[]
 register.open                        // Motion[] — status === "open"
-register.passed                      // Motion[] — outcome === "passed"
-register.failed                      // Motion[] — outcome === "failed"
+register.passed                      // Motion[] — status === "passed"
+register.failed                      // Motion[] — status === "failed"
 register.withdrawn                   // Motion[] — status === "withdrawn"
 ```
 
@@ -379,11 +379,12 @@ register.withdrawn                   // Motion[] — status === "withdrawn"
 interface Motion {
   id: string
   title: string
-  proposedBy: string
-  status: "open" | "closed" | "withdrawn"
-  outcome?: "passed" | "failed"
+  proposedBy: string | null
+  status: "open" | "passed" | "failed" | "withdrawn"
+  votes: { yes: Set<string>; no: Set<string>; abstain: Set<string> }
   openedAtBlock: number
-  closedAtBlock?: number
+  closedAtBlock: number | null
+  notes: string | null
   metadata: Record<string, string>
 }
 ```
@@ -394,8 +395,8 @@ interface Motion {
 |---|---|
 | `VoteRegister.motion({ id, title, proposedBy, metadata? })` | Open a new motion |
 | `VoteRegister.cast({ motionId, voterId, vote })` | Cast a vote (`"yes"` \| `"no"` \| `"abstain"`) |
-| `VoteRegister.close({ id, outcome })` | Close a motion with outcome (`"passed"` \| `"failed"`) |
-| `VoteRegister.withdraw({ id, reason? })` | Withdraw an open motion |
+| `VoteRegister.close({ motionId, outcome })` | Close a motion with outcome (`"passed"` \| `"failed"`) |
+| `VoteRegister.withdraw({ motionId, reason? })` | Withdraw an open motion |
 
 ---
 
@@ -417,7 +418,7 @@ const chain = createChain(
     creatorId: "board.secretary@acme.com",
     identityType: "anonymous",
     publicKey,
-    schema: DecisionLog.genesisSchema,
+    contentSchema: DecisionLog.genesisSchema,
   },
   privateKey,
 )
@@ -435,19 +436,18 @@ await appendBlock(chain, { content: DecisionLog.record({
   metadata: { vote: "5-0", reference: "BOD-2026-Q1" },
 }), publicKey }, privateKey)
 
-// Supersede with a new decision
-await appendBlock(chain, { content: DecisionLog.supersede({
+// Record the new decision
+await appendBlock(chain, { content: DecisionLog.record({
   id: "RES-2026-002",
   title: "Approve revised Q1 budget",
   body: "The board approves the revised Q1 2026 budget of $2.6M.",
   decidedBy: "board",
-  supersedes: "RES-2026-001",
 }), publicKey }, privateKey)
 
-// Withdraw a decision
-await appendBlock(chain, { content: DecisionLog.withdraw({
+// Mark the old decision as superseded
+await appendBlock(chain, { content: DecisionLog.supersede({
   id: "RES-2026-001",
-  reason: "Superseded by RES-2026-002",
+  supersededBy: "RES-2026-002",
 }), publicKey }, privateKey)
 
 // Annotate without changing status
@@ -477,12 +477,12 @@ interface Decision {
   id: string
   title: string
   body: string
-  decidedBy: string
+  decidedBy: string | null
   status: "active" | "superseded" | "withdrawn"
-  supersedes?: string
-  supersededBy?: string
+  supersededBy: string | null
   annotations: string[]
   recordedAtBlock: number
+  lastUpdatedAtBlock: number
   metadata: Record<string, string>
 }
 ```
@@ -492,7 +492,7 @@ interface Decision {
 | Builder | Description |
 |---|---|
 | `DecisionLog.record({ id, title, body, decidedBy, metadata? })` | Record a new decision |
-| `DecisionLog.supersede({ id, title, body, decidedBy, supersedes, metadata? })` | Record a decision that supersedes an earlier one |
+| `DecisionLog.supersede({ id, supersededBy, reason? })` | Mark a decision as superseded by another |
 | `DecisionLog.withdraw({ id, reason? })` | Withdraw a decision |
 | `DecisionLog.annotate({ id, note })` | Add a note without changing status |
 
@@ -516,7 +516,7 @@ const chain = createChain(
     creatorId: "pm@company.com",
     identityType: "anonymous",
     publicKey,
-    schema: Timeline.genesisSchema,
+    contentSchema: Timeline.genesisSchema,
   },
   privateKey,
 )
@@ -570,8 +570,10 @@ interface TimelineEntry {
   title: string
   body: string
   tags: string[]
-  active: boolean           // false after RETRACT
+  date: string | null
+  retracted: boolean        // true after RETRACT
   addedAtBlock: number
+  retractedAtBlock: number | null
   metadata: Record<string, string>
 }
 ```
@@ -603,7 +605,7 @@ const chain = createChain(
     creatorId: "compliance@acme.com",
     identityType: "anonymous",
     publicKey,
-    schema: DocumentRegister.genesisSchema,
+    contentSchema: DocumentRegister.genesisSchema,
   },
   privateKey,
 )
@@ -621,13 +623,18 @@ await appendBlock(chain, { content: DocumentRegister.publish({
   metadata: { owner: "ciso@acme.com", review_date: "2027-01-01" },
 }), publicKey }, privateKey)
 
-// Supersede with a new version
-await appendBlock(chain, { content: DocumentRegister.supersede({
+// Publish the new version
+await appendBlock(chain, { content: DocumentRegister.publish({
   id: "POL-INFOSEC-002",
   title: "Information Security Policy",
   hash: "sha256:def456...",
   version: "2.0",
-  supersedes: "POL-INFOSEC-001",
+}), publicKey }, privateKey)
+
+// Mark the old version as superseded
+await appendBlock(chain, { content: DocumentRegister.supersede({
+  id: "POL-INFOSEC-001",
+  supersededBy: "POL-INFOSEC-002",
 }), publicKey }, privateKey)
 
 // Withdraw
@@ -651,7 +658,7 @@ const register = DocumentRegister.fromChain(chain)
 register.get("POL-INFOSEC-001")       // Document | undefined
 register.byHash("sha256:abc123...")   // Document | undefined — look up by content hash
 register.all                          // Document[]
-register.current                      // Document[] — status === "published"
+register.current                      // Document[] — status === "current"
 register.superseded                   // Document[]
 register.withdrawn                    // Document[]
 ```
@@ -663,11 +670,12 @@ interface Document {
   id: string
   title: string
   hash: string
-  version: string
-  status: "published" | "superseded" | "withdrawn"
-  supersedes?: string
-  supersededBy?: string
+  url: string | null
+  version: string | null
+  status: "current" | "superseded" | "withdrawn"
+  supersededBy: string | null
   publishedAtBlock: number
+  lastUpdatedAtBlock: number
   metadata: Record<string, string>
 }
 ```
@@ -677,7 +685,7 @@ interface Document {
 | Builder | Description |
 |---|---|
 | `DocumentRegister.publish({ id, title, hash, version, metadata? })` | Publish a new document |
-| `DocumentRegister.supersede({ id, title, hash, version, supersedes, metadata? })` | Publish a new version that supersedes an existing one |
+| `DocumentRegister.supersede({ id, supersededBy, reason? })` | Mark a document as superseded by another |
 | `DocumentRegister.withdraw({ id, reason? })` | Withdraw a document |
 | `DocumentRegister.restore({ id, reason? })` | Restore a withdrawn document |
 
@@ -701,7 +709,7 @@ const chain = createChain(
     creatorId: "platform-team@company.com",
     identityType: "anonymous",
     publicKey,
-    schema: AccessList.genesisSchema,
+    contentSchema: AccessList.genesisSchema,
   },
   privateKey,
 )
@@ -713,10 +721,10 @@ const chain = createChain(
 // Grant access
 await appendBlock(chain, { content: AccessList.grant({
   id: "contractor-alice",
-  resource: "payments-api",
+  label: "payments-api (read-only)",
   grantedBy: "platform-lead@company.com",
   expiresAt: "2026-12-31T00:00:00Z",
-  metadata: { ticket: "SEC-1042", scope: "read-only" },
+  metadata: { ticket: "SEC-1042" },
 }), publicKey }, privateKey)
 
 // Revoke access
@@ -743,7 +751,7 @@ list.granted                          // AccessEntry[] — status === "granted"
 list.revoked                          // AccessEntry[]
 list.all                              // AccessEntry[]
 list.stale()                          // AccessEntry[] — granted but past expiresAt (uses Date.now())
-list.stale("2026-06-01T00:00:00Z")    // AccessEntry[] — stale as of given timestamp
+list.stale(new Date("2026-06-01"))    // AccessEntry[] — granted but past expiresAt as of given date
 ```
 
 ### AccessEntry shape
@@ -751,11 +759,12 @@ list.stale("2026-06-01T00:00:00Z")    // AccessEntry[] — stale as of given tim
 ```ts
 interface AccessEntry {
   id: string
-  resource: string
-  grantedBy: string
-  status: "granted" | "revoked" | "expired"
-  expiresAt?: string
+  label: string | null
+  granted: boolean           // false after REVOKE or EXPIRE
+  grantedBy: string | null
+  expiresAt: string | null
   grantedAtBlock: number
+  lastUpdatedAtBlock: number
   metadata: Record<string, string>
 }
 ```
@@ -764,7 +773,7 @@ interface AccessEntry {
 
 | Builder | Description |
 |---|---|
-| `AccessList.grant({ id, resource, grantedBy, expiresAt?, metadata? })` | Grant access |
+| `AccessList.grant({ id, label?, grantedBy, expiresAt?, metadata? })` | Grant access |
 | `AccessList.revoke({ id, revokedBy, reason? })` | Revoke access |
 | `AccessList.expire({ id })` | Mark access as expired |
 
@@ -788,7 +797,7 @@ const chain = createChain(
     creatorId: "ci-bot@company.com",
     identityType: "anonymous",
     publicKey,
-    schema: ChangeLog.genesisSchema,
+    contentSchema: ChangeLog.genesisSchema,
   },
   privateKey,
 )
@@ -839,10 +848,12 @@ log.latest                            // Release | undefined — most recent act
 interface Release {
   version: string
   notes: string
-  tags: string[]
   breaking: boolean
   status: "active" | "deprecated" | "yanked"
+  successor: string | null    // set when deprecated in favour of a newer version
+  yankReason: string | null
   releasedAtBlock: number
+  lastUpdatedAtBlock: number
   metadata: Record<string, string>
 }
 ```
@@ -889,4 +900,4 @@ function fromChain(chain: Chain): MyState {
 }
 ```
 
-See [Reducer API](../reference/connector-api.md) for full type signatures.
+See [Programmatic API](./programmatic-api.md) and the `@glorychain/structures` source for full type signatures.

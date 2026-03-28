@@ -122,8 +122,6 @@ Block 3   "ROLLBACK to v2.14.0 — p99 latency spike post-deploy. Triggered: aut
 
 ---
 
----
-
 ## 💻 Developer tooling — architecture decision records (structured)
 
 **The problem:** Engineering teams make architectural decisions that shape codebases for years. The reasons get lost. New engineers can't tell why things are the way they are.
@@ -133,9 +131,11 @@ Block 3   "ROLLBACK to v2.14.0 — p99 latency spike post-deploy. Triggered: aut
 **With glorychain:**
 
 ```bash
-glorychain init \
-  --name "API Platform Architecture Decisions" \
-  --purpose "Immutable record of all architecture decisions for the API platform team."
+glorychain init --preset board-decisions
+glorychain create \
+  --key $PRIVATE_KEY --pubkey $PUBLIC_KEY \
+  --content "Architecture Decision Register for the API platform team." \
+  --purpose "board-decisions"
 ```
 
 Each ADR is a signed, schema-validated block:
@@ -164,9 +164,11 @@ Each ADR is a signed, schema-validated block:
 **With glorychain:**
 
 ```bash
-glorychain init \
-  --name "Production Service Config" \
-  --purpose "Tamper-evident audit log of all configuration changes to production services."
+glorychain init --preset audit-log
+glorychain create \
+  --key $PRIVATE_KEY --pubkey $PUBLIC_KEY \
+  --content "Tamper-evident audit log of all configuration changes to production services." \
+  --purpose "audit-log"
 ```
 
 Every change is an append-only event:
@@ -190,9 +192,11 @@ The chain gives you a complete, ordered history of every SET and DELETE — who 
 **With glorychain:**
 
 ```bash
-glorychain init \
-  --name "Platform Team Roster" \
-  --purpose "Authoritative membership registry for the platform engineering team."
+glorychain init --preset membership-register
+glorychain create \
+  --key $PRIVATE_KEY --pubkey $PUBLIC_KEY \
+  --content "Authoritative membership registry for the platform engineering team." \
+  --purpose "membership"
 ```
 
 Every join, departure, and role change is a signed event:

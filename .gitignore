@@ -33,5 +33,6 @@ coverage/
 
 # BMAD (agent scaffolding — not part of the project)
 /_bmad
+/_bmad-output
 /.claude/skills
 /.cursor/skills

@@ -29,7 +29,7 @@ const result = createChain(
     creatorId: "board.chair@acme-aid.org",
     identityType: "anonymous",
     publicKey,
-    schema: {
+    contentSchema: {
       type: "object",
       required: ["type", "resolution", "vote", "date"],
       properties: {
@@ -101,23 +101,9 @@ if (!result.valid) {
 
 ---
 
-## CLI usage
-
-Schema is defined in a JSON file passed at creation time:
-
-```bash
-glorychain create \
-  --key <privateKey> \
-  --pubkey <publicKey> \
-  --content "Board resolution register." \
-  --schema ./resolution-schema.json
-```
-
----
-
 ## Tips
 
 - Keep schemas strict (`additionalProperties: false`) to prevent drift
 - Use `enum` for type fields to make chains queryable
-- Schema is stored in the genesis block's `metadata.schema` — it travels with the chain
+- Schema is stored in the genesis block's `contentSchema` field — it travels with the chain
 - The schema cannot be changed after genesis — fork the chain if you need a schema change

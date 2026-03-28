@@ -26,7 +26,7 @@ const createResult = createChain(
     creatorId: "platform-team@glorychain.io",
     identityType: "anonymous",
     publicKey,
-    schema: AccessList.genesisSchema,
+    contentSchema: AccessList.genesisSchema,
   },
   privateKey,
 );

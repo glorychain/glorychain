@@ -26,7 +26,7 @@ const createResult = createChain(
     creatorId: "pm@glorychain.io",
     identityType: "anonymous",
     publicKey,
-    schema: Timeline.genesisSchema,
+    contentSchema: Timeline.genesisSchema,
   },
   privateKey,
 );

@@ -122,7 +122,7 @@ import {
   createChain,
   appendBlock,
   verifyChain,
-  verifyBlock,
+  verifySingleBlock,
   inspectBlock,
 
   // Keypair
@@ -134,7 +134,8 @@ import {
   // Types
   type Chain,
   type Block,
-  type GenesisMetadata,
+  type GenesisBlock,
+  type ChainMetadata,
   type VerificationResult,
   type VerificationError,
 } from "@glorychain/core"
