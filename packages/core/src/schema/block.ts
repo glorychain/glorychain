@@ -21,6 +21,7 @@ export interface Block {
   signature: string; // base64url-encoded signature over: chainId + blockNumber + content + previousHash
   publicKey: string; // base64url-encoded public key that signed this block
   protocolVersion: string; // protocol version at time of block creation (FR14)
+  provenance?: true; // present on blocks copied from source chain during fork — read-only historical record
 }
 
 // JsonSchemaV7 — a plain JSON-serialisable JSON Schema v7 definition.

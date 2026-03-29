@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { genesisCanonical } from "../block/canonical.js";
 import { hashBlock } from "../crypto/hash.js";
 import { signBlock } from "../crypto/sign.js";
 import type { ForkGenesisBlock, ISO8601 } from "../schema/block.js";
@@ -51,35 +52,19 @@ export function forkChain(
   const timestamp = new Date().toISOString() as ISO8601;
   const protocolVersion = PROTOCOL_VERSION;
   const forkSourceBlockHash = sourceBlock.hash;
+  // Fork genesis sits immediately after the last provenance block
+  const forkGenesisBlockNumber = forkFromBlockNumber + 1;
 
-  const canonical = JSON.stringify({
-    blockNumber: 0,
+  // Build an unsigned fork genesis first so genesisCanonical can include all fields correctly.
+  // blockNumber is the actual position in the fork chain (not 0) — verifier uses forkOf to detect it.
+  const unsignedForkGenesis: ForkGenesisBlock = {
+    blockNumber: forkGenesisBlockNumber,
     chainId,
     content,
     timestamp,
     previousHash: null,
-    protocolVersion,
-    creatorId,
-    purpose,
-    identityType,
-    hashAlgorithm,
-    signatureScheme,
-  });
-
-  const hashResult = hashBlock(canonical, hashAlgorithm);
-  if (!hashResult.ok) return hashResult;
-
-  const signResult = signBlock(canonical, privateKey, signatureScheme);
-  if (!signResult.ok) return signResult;
-
-  const forkGenesisBlock: ForkGenesisBlock = {
-    blockNumber: 0,
-    chainId,
-    content,
-    timestamp,
-    previousHash: null,
-    hash: hashResult.value,
-    signature: signResult.value,
+    hash: "", // placeholder — filled below
+    signature: "", // placeholder — filled below
     publicKey,
     protocolVersion,
     creatorId,
@@ -93,6 +78,20 @@ export function forkChain(
     ...(forkReason !== undefined && { forkReason }),
   };
 
+  const canonical = genesisCanonical(unsignedForkGenesis);
+
+  const hashResult = hashBlock(canonical, hashAlgorithm);
+  if (!hashResult.ok) return hashResult;
+
+  const signResult = signBlock(canonical, privateKey, signatureScheme);
+  if (!signResult.ok) return signResult;
+
+  const forkGenesisBlock: ForkGenesisBlock = {
+    ...unsignedForkGenesis,
+    hash: hashResult.value,
+    signature: signResult.value,
+  };
+
   const metadata: ChainMetadata = {
     chainId,
     createdAt: timestamp,
@@ -104,7 +103,22 @@ export function forkChain(
     transferHistory: [],
   };
 
-  return { ok: true, value: { metadata, blocks: [forkGenesisBlock] } };
+  // Copy source blocks 0..forkFromBlockNumber as provenance (read-only historical record).
+  // These blocks retain their original chainId, hashes, and signatures — immutable snapshots.
+  const provenanceBlocks = sourceChain.blocks
+    .slice(0, forkFromBlockNumber + 1)
+    .map((b) => ({ ...b, provenance: true as const }));
+
+  const allBlocks = [...provenanceBlocks, forkGenesisBlock];
+
+  return {
+    ok: true,
+    value: {
+      metadata,
+      // allBlocks[0] is the source genesis (GenesisBlock) — satisfies Chain's tuple constraint
+      blocks: allBlocks as unknown as Chain["blocks"],
+    },
+  };
 }
 
 export function recordForkOnSource(
