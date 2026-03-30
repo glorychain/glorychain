@@ -1,9 +1,10 @@
 {
   "name": "@glorychain/examples",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "scripts": {
+    "10": "tsx 10-changelog/index.ts",
     "01": "tsx 01-core-basics/index.ts",
     "02": "tsx 02-key-value-store/index.ts",
     "03": "tsx 03-member-set/index.ts",
@@ -12,8 +13,7 @@
     "06": "tsx 06-decision-log/index.ts",
     "07": "tsx 07-timeline/index.ts",
     "08": "tsx 08-document-register/index.ts",
-    "09": "tsx 09-access-list/index.ts",
-    "10": "tsx 10-changelog/index.ts"
+    "09": "tsx 09-access-list/index.ts"
   },
   "dependencies": {
     "@glorychain/core": "workspace:*",
