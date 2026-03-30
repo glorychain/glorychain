@@ -1,9 +1,13 @@
-export type ChangeLogEventType = "RELEASE" | "DEPRECATE" | "YANK";
+export enum ChangeLogEventType {
+  RELEASE = "RELEASE",
+  DEPRECATE = "DEPRECATE",
+  YANK = "YANK",
+}
 
 export type ReleaseStatus = "active" | "deprecated" | "yanked";
 
 export interface ReleaseEvent {
-  type: "RELEASE";
+  type: ChangeLogEventType.RELEASE;
   version: string;
   notes?: string;
   breaking?: boolean;
@@ -11,14 +15,14 @@ export interface ReleaseEvent {
 }
 
 export interface DeprecateEvent {
-  type: "DEPRECATE";
+  type: ChangeLogEventType.DEPRECATE;
   version: string;
   reason?: string;
   successor?: string;
 }
 
 export interface YankEvent {
-  type: "YANK";
+  type: ChangeLogEventType.YANK;
   version: string;
   reason: string;
 }

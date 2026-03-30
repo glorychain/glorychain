@@ -1,13 +1,14 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
-import type {
-  AnnotateEvent,
-  Decision,
-  DecisionEvent,
-  DecisionLogState,
-  RecordEvent,
-  SupersedeEvent,
-  WithdrawDecisionEvent,
+import {
+  DecisionEventType,
+  type AnnotateEvent,
+  type Decision,
+  type DecisionEvent,
+  type DecisionLogState,
+  type RecordEvent,
+  type SupersedeEvent,
+  type WithdrawDecisionEvent,
 } from "./types.js";
 
 const EMPTY_STATE: DecisionLogState = { decisions: new Map() };
@@ -15,7 +16,7 @@ const EMPTY_STATE: DecisionLogState = { decisions: new Map() };
 function parseDecisionEvent(content: string): DecisionEvent | null {
   const parsed = parseJson<DecisionEvent>(content);
   if (!parsed || typeof parsed.type !== "string") return null;
-  if (!["RECORD", "SUPERSEDE", "WITHDRAW", "ANNOTATE"].includes(parsed.type)) return null;
+  if (!Object.values(DecisionEventType).includes(parsed.type as DecisionEventType)) return null;
   return parsed;
 }
 
@@ -27,7 +28,7 @@ function decisionReducer(
   const decisions = new Map(state.decisions);
 
   switch (event.type) {
-    case "RECORD":
+    case DecisionEventType.RECORD:
       decisions.set(event.id, {
         id: event.id,
         title: event.title,
@@ -42,7 +43,7 @@ function decisionReducer(
       });
       break;
 
-    case "SUPERSEDE": {
+    case DecisionEventType.SUPERSEDE: {
       const d = decisions.get(event.id);
       if (d) {
         decisions.set(event.id, {
@@ -55,7 +56,7 @@ function decisionReducer(
       break;
     }
 
-    case "WITHDRAW": {
+    case DecisionEventType.WITHDRAW: {
       const d = decisions.get(event.id);
       if (d) {
         decisions.set(event.id, {
@@ -67,7 +68,7 @@ function decisionReducer(
       break;
     }
 
-    case "ANNOTATE": {
+    case DecisionEventType.ANNOTATE: {
       const d = decisions.get(event.id);
       if (d) {
         decisions.set(event.id, {
@@ -151,19 +152,19 @@ export class DecisionLog {
   // ─── Event builders ────────────────────────────────────────────────────────
 
   static record(input: Omit<RecordEvent, "type">): string {
-    return serialiseEvent<DecisionEvent>({ type: "RECORD", ...input });
+    return serialiseEvent<DecisionEvent>({ type: DecisionEventType.RECORD, ...input });
   }
 
   static supersede(input: Omit<SupersedeEvent, "type">): string {
-    return serialiseEvent<DecisionEvent>({ type: "SUPERSEDE", ...input });
+    return serialiseEvent<DecisionEvent>({ type: DecisionEventType.SUPERSEDE, ...input });
   }
 
   static withdraw(input: Omit<WithdrawDecisionEvent, "type">): string {
-    return serialiseEvent<DecisionEvent>({ type: "WITHDRAW", ...input });
+    return serialiseEvent<DecisionEvent>({ type: DecisionEventType.WITHDRAW, ...input });
   }
 
   static annotate(input: Omit<AnnotateEvent, "type">): string {
-    return serialiseEvent<DecisionEvent>({ type: "ANNOTATE", ...input });
+    return serialiseEvent<DecisionEvent>({ type: DecisionEventType.ANNOTATE, ...input });
   }
 
   static get genesisSchema() {
@@ -171,7 +172,7 @@ export class DecisionLog {
       type: "object",
       required: ["type", "id"],
       properties: {
-        type: { type: "string", enum: ["RECORD", "SUPERSEDE", "WITHDRAW", "ANNOTATE"] },
+        type: { type: "string", enum: Object.values(DecisionEventType) },
         id: { type: "string", minLength: 1 },
         title: { type: "string" },
         body: { type: "string" },

@@ -1,19 +1,23 @@
-export type KeyValueEventType = "SET" | "DELETE" | "CLEAR";
+export enum KeyValueEventType {
+  SET = "SET",
+  DELETE = "DELETE",
+  CLEAR = "CLEAR",
+}
 
 export interface SetEvent {
-  type: "SET";
+  type: KeyValueEventType.SET;
   key: string;
   value: string;
   metadata?: Record<string, string>;
 }
 
 export interface DeleteEvent {
-  type: "DELETE";
+  type: KeyValueEventType.DELETE;
   key: string;
 }
 
 export interface ClearEvent {
-  type: "CLEAR";
+  type: KeyValueEventType.CLEAR;
 }
 
 export type KeyValueEvent = SetEvent | DeleteEvent | ClearEvent;

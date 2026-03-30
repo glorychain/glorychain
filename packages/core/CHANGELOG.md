@@ -1,5 +1,29 @@
 # @glorychain/core
 
+## 0.1.0
+
+### Minor Changes
+
+- `appendBlock()` now enforces schema validation when a chain defines a `contentSchema`.
+
+  Previously, schema validation was silently skipped if no `validateContent` option was passed. Now, if the genesis block has a `contentSchema` and no validator is provided, `appendBlock` returns `{ ok: false, error: { code: "SCHEMA_VIOLATION" } }`.
+
+  **Migration:** Pass `{ validateContent: createAjvValidator() }` as the fourth argument to `appendBlock` on any chain created with a `contentSchema`.
+
+- ae1e0db: Forked chains are now self-contained. `forkChain()` copies source blocks `0..forkFromBlockNumber` into the fork as provenance blocks (`provenance: true`), followed by the fork genesis at `blockNumber = forkFromBlockNumber + 1`. The fork genesis's `forkSourceBlockHash` cryptographically anchors the provenance section.
+
+  `verifyChain()` handles the three zones: provenance blocks (hash/sig verified, chainId mismatch skipped by design), the fork genesis boundary (`forkSourceBlockHash` verified against the last provenance block), and post-fork blocks (normal verification).
+
+  `ForkGenesisBlock.blockNumber` is now `number` (was `0` via inheritance from `GenesisBlock`). `genesisCanonical()` now accepts both `GenesisBlock` and `ForkGenesisBlock`.
+
+### Patch Changes
+
+- eb1e610: Fix API inaccuracies across all documentation and examples.
+
+  Notable bug fix: examples were passing `schema:` to `createChain` instead of `contentSchema:` — the wrong field was silently ignored at runtime, so schema enforcement was never applied. All examples now correctly use `contentSchema`.
+
+  Documentation corrections: protocol version `0.0.1` (was `0.1`), correct genesis block shape, canonical payload format, fork field names, `forkChain` signature, `Connector` interface, `ChainMetadata` shape, `FsConnector` constructor, `connector.write(chain)` signature, `ThreatEventType` values, `verifySingleBlock` naming, `DecisionLog`/`DocumentRegister.supersede` parameters, and `packages/shared` exports.
+
 ## 0.0.3
 
 ### Patch Changes

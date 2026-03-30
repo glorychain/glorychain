@@ -1,13 +1,19 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
-import type { KeyValueEntry, KeyValueEvent, KeyValueStoreState, SetEvent } from "./types.js";
+import {
+  KeyValueEventType,
+  type KeyValueEntry,
+  type KeyValueEvent,
+  type KeyValueStoreState,
+  type SetEvent,
+} from "./types.js";
 
 const EMPTY_STATE: KeyValueStoreState = { entries: new Map() };
 
 function parseKeyValueEvent(content: string): KeyValueEvent | null {
   const parsed = parseJson<KeyValueEvent>(content);
   if (!parsed || typeof parsed.type !== "string") return null;
-  if (!["SET", "DELETE", "CLEAR"].includes(parsed.type)) return null;
+  if (!Object.values(KeyValueEventType).includes(parsed.type as KeyValueEventType)) return null;
   return parsed;
 }
 
@@ -19,7 +25,7 @@ function kvReducer(
   const entries = new Map(state.entries);
 
   switch (event.type) {
-    case "SET":
+    case KeyValueEventType.SET:
       entries.set(event.key, {
         key: event.key,
         value: event.value,
@@ -27,10 +33,10 @@ function kvReducer(
         metadata: event.metadata ?? {},
       });
       break;
-    case "DELETE":
+    case KeyValueEventType.DELETE:
       entries.delete(event.key);
       break;
-    case "CLEAR":
+    case KeyValueEventType.CLEAR:
       entries.clear();
       break;
   }
@@ -107,15 +113,15 @@ export class KeyValueStore {
   // ─── Event builders ────────────────────────────────────────────────────────
 
   static set(input: Omit<SetEvent, "type">): string {
-    return serialiseEvent<KeyValueEvent>({ type: "SET", ...input });
+    return serialiseEvent<KeyValueEvent>({ type: KeyValueEventType.SET, ...input });
   }
 
   static delete(key: string): string {
-    return serialiseEvent<KeyValueEvent>({ type: "DELETE", key });
+    return serialiseEvent<KeyValueEvent>({ type: KeyValueEventType.DELETE, key });
   }
 
   static clear(): string {
-    return serialiseEvent<KeyValueEvent>({ type: "CLEAR" });
+    return serialiseEvent<KeyValueEvent>({ type: KeyValueEventType.CLEAR });
   }
 
   static get genesisSchema() {
@@ -123,7 +129,7 @@ export class KeyValueStore {
       type: "object",
       required: ["type"],
       properties: {
-        type: { type: "string", enum: ["SET", "DELETE", "CLEAR"] },
+        type: { type: "string", enum: Object.values(KeyValueEventType) },
         key: { type: "string", minLength: 1 },
         value: { type: "string" },
         metadata: { type: "object" },

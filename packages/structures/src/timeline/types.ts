@@ -1,7 +1,10 @@
-export type TimelineEventType = "ENTRY" | "RETRACT";
+export enum TimelineEventType {
+  ENTRY = "ENTRY",
+  RETRACT = "RETRACT",
+}
 
 export interface EntryEvent {
-  type: "ENTRY";
+  type: TimelineEventType.ENTRY;
   id: string;
   title: string;
   body?: string;
@@ -11,7 +14,7 @@ export interface EntryEvent {
 }
 
 export interface RetractEvent {
-  type: "RETRACT";
+  type: TimelineEventType.RETRACT;
   id: string;
   reason?: string;
 }

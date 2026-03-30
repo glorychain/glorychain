@@ -1,13 +1,14 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
-import type {
-  CastEvent,
-  CloseEvent,
-  Motion,
-  MotionEvent,
-  VoteEvent,
-  VoteRegisterState,
-  WithdrawEvent,
+import {
+  VoteEventType,
+  type CastEvent,
+  type CloseEvent,
+  type Motion,
+  type MotionEvent,
+  type VoteEvent,
+  type VoteRegisterState,
+  type WithdrawEvent,
 } from "./types.js";
 
 const EMPTY_STATE: VoteRegisterState = { motions: new Map() };
@@ -15,7 +16,7 @@ const EMPTY_STATE: VoteRegisterState = { motions: new Map() };
 function parseVoteEvent(content: string): VoteEvent | null {
   const parsed = parseJson<VoteEvent>(content);
   if (!parsed || typeof parsed.type !== "string") return null;
-  if (!["MOTION", "CAST", "CLOSE", "WITHDRAW"].includes(parsed.type)) return null;
+  if (!Object.values(VoteEventType).includes(parsed.type as VoteEventType)) return null;
   return parsed;
 }
 
@@ -27,7 +28,7 @@ function voteReducer(
   const motions = new Map(state.motions);
 
   switch (event.type) {
-    case "MOTION":
+    case VoteEventType.MOTION:
       motions.set(event.id, {
         id: event.id,
         title: event.title,
@@ -41,7 +42,7 @@ function voteReducer(
       });
       break;
 
-    case "CAST": {
+    case VoteEventType.CAST: {
       const motion = motions.get(event.motionId);
       if (!motion || motion.status !== "open") break;
       // Remove previous vote (O(1) with Set), then add new vote
@@ -64,7 +65,7 @@ function voteReducer(
       break;
     }
 
-    case "CLOSE": {
+    case VoteEventType.CLOSE: {
       const motion = motions.get(event.motionId);
       if (!motion || motion.status !== "open") break;
       const outcome =
@@ -78,7 +79,7 @@ function voteReducer(
       break;
     }
 
-    case "WITHDRAW": {
+    case VoteEventType.WITHDRAW: {
       const motion = motions.get(event.motionId);
       if (!motion || motion.status !== "open") break;
       motions.set(event.motionId, {
@@ -182,19 +183,19 @@ export class VoteRegister {
   // ─── Event builders ────────────────────────────────────────────────────────
 
   static motion(input: Omit<MotionEvent, "type">): string {
-    return serialiseEvent<VoteEvent>({ type: "MOTION", ...input });
+    return serialiseEvent<VoteEvent>({ type: VoteEventType.MOTION, ...input });
   }
 
   static cast(input: Omit<CastEvent, "type">): string {
-    return serialiseEvent<VoteEvent>({ type: "CAST", ...input });
+    return serialiseEvent<VoteEvent>({ type: VoteEventType.CAST, ...input });
   }
 
   static close(input: Omit<CloseEvent, "type">): string {
-    return serialiseEvent<VoteEvent>({ type: "CLOSE", ...input });
+    return serialiseEvent<VoteEvent>({ type: VoteEventType.CLOSE, ...input });
   }
 
   static withdraw(input: Omit<WithdrawEvent, "type">): string {
-    return serialiseEvent<VoteEvent>({ type: "WITHDRAW", ...input });
+    return serialiseEvent<VoteEvent>({ type: VoteEventType.WITHDRAW, ...input });
   }
 
   static get genesisSchema() {
@@ -202,7 +203,7 @@ export class VoteRegister {
       type: "object",
       required: ["type"],
       properties: {
-        type: { type: "string", enum: ["MOTION", "CAST", "CLOSE", "WITHDRAW"] },
+        type: { type: "string", enum: Object.values(VoteEventType) },
         id: { type: "string", minLength: 1 },
         motionId: { type: "string", minLength: 1 },
         title: { type: "string" },

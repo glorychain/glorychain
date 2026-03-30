@@ -1,12 +1,13 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
-import type {
-  AccessEntry,
-  AccessEvent,
-  AccessListState,
-  ExpireEvent,
-  GrantEvent,
-  RevokeEvent,
+import {
+  AccessEventType,
+  type AccessEntry,
+  type AccessEvent,
+  type AccessListState,
+  type ExpireEvent,
+  type GrantEvent,
+  type RevokeEvent,
 } from "./types.js";
 
 const EMPTY_STATE: AccessListState = { entries: new Map() };
@@ -14,7 +15,7 @@ const EMPTY_STATE: AccessListState = { entries: new Map() };
 function parseAccessEvent(content: string): AccessEvent | null {
   const parsed = parseJson<AccessEvent>(content);
   if (!parsed || typeof parsed.type !== "string") return null;
-  if (!["GRANT", "REVOKE", "EXPIRE"].includes(parsed.type)) return null;
+  if (!Object.values(AccessEventType).includes(parsed.type as AccessEventType)) return null;
   return parsed;
 }
 
@@ -26,7 +27,7 @@ function accessReducer(
   const entries = new Map(state.entries);
 
   switch (event.type) {
-    case "GRANT":
+    case AccessEventType.GRANT:
       entries.set(event.id, {
         id: event.id,
         label: event.label ?? null,
@@ -39,7 +40,7 @@ function accessReducer(
       });
       break;
 
-    case "REVOKE": {
+    case AccessEventType.REVOKE: {
       const e = entries.get(event.id);
       if (e) {
         entries.set(event.id, { ...e, granted: false, lastUpdatedAtBlock: blockNumber });
@@ -47,7 +48,7 @@ function accessReducer(
       break;
     }
 
-    case "EXPIRE": {
+    case AccessEventType.EXPIRE: {
       const e = entries.get(event.id);
       if (e) {
         entries.set(event.id, { ...e, granted: false, lastUpdatedAtBlock: blockNumber });
@@ -125,15 +126,15 @@ export class AccessList {
   // ─── Event builders ────────────────────────────────────────────────────────
 
   static grant(input: Omit<GrantEvent, "type">): string {
-    return serialiseEvent<AccessEvent>({ type: "GRANT", ...input });
+    return serialiseEvent<AccessEvent>({ type: AccessEventType.GRANT, ...input });
   }
 
   static revoke(input: Omit<RevokeEvent, "type">): string {
-    return serialiseEvent<AccessEvent>({ type: "REVOKE", ...input });
+    return serialiseEvent<AccessEvent>({ type: AccessEventType.REVOKE, ...input });
   }
 
   static expire(input: Omit<ExpireEvent, "type">): string {
-    return serialiseEvent<AccessEvent>({ type: "EXPIRE", ...input });
+    return serialiseEvent<AccessEvent>({ type: AccessEventType.EXPIRE, ...input });
   }
 
   static get genesisSchema() {
@@ -141,7 +142,7 @@ export class AccessList {
       type: "object",
       required: ["type", "id"],
       properties: {
-        type: { type: "string", enum: ["GRANT", "REVOKE", "EXPIRE"] },
+        type: { type: "string", enum: Object.values(AccessEventType) },
         id: { type: "string", minLength: 1 },
         label: { type: "string" },
         expiresAt: { type: "string" },

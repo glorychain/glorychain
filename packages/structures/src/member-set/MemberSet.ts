@@ -1,14 +1,15 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
-import type {
-  JoinEvent,
-  LeaveEvent,
-  Member,
-  MemberEvent,
-  MemberSetState,
-  ReinstateEvent,
-  RoleChangeEvent,
-  SuspendEvent,
+import {
+  MemberEventType,
+  type JoinEvent,
+  type LeaveEvent,
+  type Member,
+  type MemberEvent,
+  type MemberSetState,
+  type ReinstateEvent,
+  type RoleChangeEvent,
+  type SuspendEvent,
 } from "./types.js";
 
 const EMPTY_STATE: MemberSetState = { members: new Map() };
@@ -16,7 +17,7 @@ const EMPTY_STATE: MemberSetState = { members: new Map() };
 function parseMemberEvent(content: string): MemberEvent | null {
   const parsed = parseJson<MemberEvent>(content);
   if (!parsed || typeof parsed.type !== "string") return null;
-  if (!["JOIN", "LEAVE", "ROLE_CHANGE", "SUSPEND", "REINSTATE"].includes(parsed.type)) return null;
+  if (!Object.values(MemberEventType).includes(parsed.type as MemberEventType)) return null;
   return parsed;
 }
 
@@ -28,7 +29,7 @@ function memberReducer(
   const members = new Map(state.members);
 
   switch (event.type) {
-    case "JOIN":
+    case MemberEventType.JOIN:
       members.set(event.id, {
         id: event.id,
         name: event.name,
@@ -41,25 +42,25 @@ function memberReducer(
       });
       break;
 
-    case "LEAVE": {
+    case MemberEventType.LEAVE: {
       const m = members.get(event.id);
       if (m) members.set(event.id, { ...m, active: false, lastUpdatedAtBlock: blockNumber });
       break;
     }
 
-    case "ROLE_CHANGE": {
+    case MemberEventType.ROLE_CHANGE: {
       const m = members.get(event.id);
       if (m) members.set(event.id, { ...m, role: event.role, lastUpdatedAtBlock: blockNumber });
       break;
     }
 
-    case "SUSPEND": {
+    case MemberEventType.SUSPEND: {
       const m = members.get(event.id);
       if (m) members.set(event.id, { ...m, suspended: true, lastUpdatedAtBlock: blockNumber });
       break;
     }
 
-    case "REINSTATE": {
+    case MemberEventType.REINSTATE: {
       const m = members.get(event.id);
       if (m) members.set(event.id, { ...m, suspended: false, lastUpdatedAtBlock: blockNumber });
       break;
@@ -137,23 +138,23 @@ export class MemberSet {
   // ─── Event builders ────────────────────────────────────────────────────────
 
   static join(input: Omit<JoinEvent, "type">): string {
-    return serialiseEvent<MemberEvent>({ type: "JOIN", ...input });
+    return serialiseEvent<MemberEvent>({ type: MemberEventType.JOIN, ...input });
   }
 
   static leave(input: Omit<LeaveEvent, "type">): string {
-    return serialiseEvent<MemberEvent>({ type: "LEAVE", ...input });
+    return serialiseEvent<MemberEvent>({ type: MemberEventType.LEAVE, ...input });
   }
 
   static roleChange(input: Omit<RoleChangeEvent, "type">): string {
-    return serialiseEvent<MemberEvent>({ type: "ROLE_CHANGE", ...input });
+    return serialiseEvent<MemberEvent>({ type: MemberEventType.ROLE_CHANGE, ...input });
   }
 
   static suspend(input: Omit<SuspendEvent, "type">): string {
-    return serialiseEvent<MemberEvent>({ type: "SUSPEND", ...input });
+    return serialiseEvent<MemberEvent>({ type: MemberEventType.SUSPEND, ...input });
   }
 
   static reinstate(input: Omit<ReinstateEvent, "type">): string {
-    return serialiseEvent<MemberEvent>({ type: "REINSTATE", ...input });
+    return serialiseEvent<MemberEvent>({ type: MemberEventType.REINSTATE, ...input });
   }
 
   static get genesisSchema() {
@@ -163,7 +164,7 @@ export class MemberSet {
       properties: {
         type: {
           type: "string",
-          enum: ["JOIN", "LEAVE", "ROLE_CHANGE", "SUSPEND", "REINSTATE"],
+          enum: Object.values(MemberEventType),
         },
         id: { type: "string", minLength: 1 },
         name: { type: "string" },
