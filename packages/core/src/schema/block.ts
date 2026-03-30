@@ -53,8 +53,10 @@ export interface GenesisBlock extends Omit<Block, "blockNumber" | "previousHash"
 }
 
 // ForkGenesisBlock — genesis block for a forked chain
-// Carries provenance reference to the original chain and fork point
-export interface ForkGenesisBlock extends GenesisBlock {
+// Carries provenance reference to the original chain and fork point.
+// blockNumber is overridden to number — fork genesis sits at forkFromBlock + 1, not 0.
+export interface ForkGenesisBlock extends Omit<GenesisBlock, "blockNumber"> {
+  blockNumber: number; // position in fork chain = forkFromBlock + 1
   forkOf: string; // chainId of the original chain this was forked from
   forkFromBlock: number; // block number on the original chain at which fork diverges
   forkSourceBlockHash: string; // hash of the source block (content-addressable reference — not just the number)

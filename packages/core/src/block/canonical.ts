@@ -1,6 +1,6 @@
-import type { Block, GenesisBlock } from "../schema/block.js";
+import type { Block, ForkGenesisBlock, GenesisBlock } from "../schema/block.js";
 
-export function genesisCanonical(block: GenesisBlock): string {
+export function genesisCanonical(block: GenesisBlock | ForkGenesisBlock): string {
   return JSON.stringify({
     blockNumber: block.blockNumber,
     chainId: block.chainId,

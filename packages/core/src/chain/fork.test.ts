@@ -65,7 +65,7 @@ describe("forkChain", () => {
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const forkGenesis = result.value.blocks[2] as ForkGenesisBlock;
+    const forkGenesis = result.value.blocks[2] as unknown as ForkGenesisBlock;
     expect(forkGenesis.forkOf).toBe(chain.metadata.chainId);
     expect(forkGenesis.forkFromBlock).toBe(1);
   });
@@ -86,7 +86,7 @@ describe("forkChain", () => {
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const forkGenesis = result.value.blocks[2] as ForkGenesisBlock;
+    const forkGenesis = result.value.blocks[2] as unknown as ForkGenesisBlock;
     expect(forkGenesis.forkSourceBlockHash).toBe(chain.blocks[1]?.hash);
   });
 
