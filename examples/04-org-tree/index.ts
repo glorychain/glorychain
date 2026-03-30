@@ -37,15 +37,18 @@ console.log("Chain created:", chain.metadata.chainId);
 
 // ─── Append org events ────────────────────────────────────────────────────────
 
+// reportsTo is the block number of the manager's APPOINT event (genesis = block 0)
+// finn=block 1, alice=block 2, bob=block 3, sara=block 4, marcos=block 5
 const events = [
   OrgTree.appoint({ id: "finn@glorychain.io", name: "Finn Fitzsimons", role: "CTO", reportsTo: null }),
-  OrgTree.appoint({ id: "alice@glorychain.io", name: "Alice Chen", role: "Engineering Manager", reportsTo: "finn@glorychain.io" }),
-  OrgTree.appoint({ id: "bob@glorychain.io", name: "Bob Okafor", role: "Senior Engineer", reportsTo: "alice@glorychain.io" }),
-  OrgTree.appoint({ id: "sara@glorychain.io", name: "Sara Lindqvist", role: "Engineer", reportsTo: "alice@glorychain.io" }),
-  OrgTree.appoint({ id: "marcos@glorychain.io", name: "Marcos Souza", role: "Engineer", reportsTo: "alice@glorychain.io" }),
-  // Bob gets promoted — now reports directly to Finn
-  OrgTree.promote({ id: "bob@glorychain.io", role: "Staff Engineer", reportsTo: "finn@glorychain.io" }),
-  OrgTree.appoint({ id: "yuki@glorychain.io", name: "Yuki Tanaka", role: "Engineer", reportsTo: "alice@glorychain.io" }),
+  OrgTree.appoint({ id: "alice@glorychain.io", name: "Alice Chen", role: "Engineering Manager", reportsTo: 1 }),
+  OrgTree.appoint({ id: "bob@glorychain.io", name: "Bob Okafor", role: "Senior Engineer", reportsTo: 2 }),
+  OrgTree.appoint({ id: "sara@glorychain.io", name: "Sara Lindqvist", role: "Engineer", reportsTo: 2 }),
+  OrgTree.appoint({ id: "marcos@glorychain.io", name: "Marcos Souza", role: "Engineer", reportsTo: 2 }),
+  // Bob gets promoted — now reports directly to Finn (block 1)
+  OrgTree.promote({ id: "bob@glorychain.io", role: "Staff Engineer", reportsTo: 1 }),
+  // yuki=block 7
+  OrgTree.appoint({ id: "yuki@glorychain.io", name: "Yuki Tanaka", role: "Engineer", reportsTo: 2 }),
 ];
 
 for (const content of events) {

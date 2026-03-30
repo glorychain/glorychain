@@ -21,6 +21,7 @@ export interface Block {
   signature: string; // base64url-encoded signature over: chainId + blockNumber + content + previousHash
   publicKey: string; // base64url-encoded public key that signed this block
   protocolVersion: string; // protocol version at time of block creation (FR14)
+  provenance?: true; // present on blocks copied from source chain during fork — read-only historical record
 }
 
 // JsonSchemaV7 — a plain JSON-serialisable JSON Schema v7 definition.
@@ -52,8 +53,10 @@ export interface GenesisBlock extends Omit<Block, "blockNumber" | "previousHash"
 }
 
 // ForkGenesisBlock — genesis block for a forked chain
-// Carries provenance reference to the original chain and fork point
-export interface ForkGenesisBlock extends GenesisBlock {
+// Carries provenance reference to the original chain and fork point.
+// blockNumber is overridden to number — fork genesis sits at forkFromBlock + 1, not 0.
+export interface ForkGenesisBlock extends Omit<GenesisBlock, "blockNumber"> {
+  blockNumber: number; // position in fork chain = forkFromBlock + 1
   forkOf: string; // chainId of the original chain this was forked from
   forkFromBlock: number; // block number on the original chain at which fork diverges
   forkSourceBlockHash: string; // hash of the source block (content-addressable reference — not just the number)

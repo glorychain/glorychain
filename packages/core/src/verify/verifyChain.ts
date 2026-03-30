@@ -1,10 +1,7 @@
-import {
-  blockCanonical,
-  computeBlockHash,
-  genesisCanonical,
-  isGenesisBlock,
-} from "../block/index.js";
+import { blockCanonical, genesisCanonical, isGenesisBlock } from "../block/index.js";
+import { hashBlock } from "../crypto/hash.js";
 import { verifyBlock as cryptoVerify } from "../crypto/sign.js";
+import type { Block, GenesisBlock } from "../schema/block.js";
 import type { Chain } from "../schema/chain.js";
 import { ErrorCode } from "../schema/errors.js";
 import type { VerificationError, VerificationResult } from "../schema/verification.js";
@@ -19,6 +16,17 @@ export interface VerifyOptions {
   validateContent?: ContentValidator;
 }
 
+// isForkGenesisBlock — detects a fork genesis block by presence of forkOf field.
+// Fork genesis blocks are NOT at blockNumber 0 (provenance blocks occupy 0..N),
+// so isGenesisBlock() cannot be used as the discriminant here.
+function isForkGenesisBlock(block: Block | GenesisBlock): block is GenesisBlock & {
+  forkOf: string;
+  forkFromBlock: number;
+  forkSourceBlockHash: string;
+} {
+  return "forkOf" in block;
+}
+
 export function verifyChain(chain: Chain, options?: VerifyOptions): VerificationResult {
   const { blocks, metadata } = chain;
   const { hashAlgorithm, signatureScheme, chainId } = metadata;
@@ -26,15 +34,22 @@ export function verifyChain(chain: Chain, options?: VerifyOptions): Verification
   let lastVerifiedBlock = -1;
   const seenBlockNumbers = new Set<number>();
 
-  // Extract contentSchema from genesis block once — used for all subsequent blocks
-  const genesis = blocks[0];
-  const contentSchema =
-    genesis !== undefined && isGenesisBlock(genesis) ? genesis.contentSchema : undefined;
+  // Detect the fork genesis index — the first block with forkOf (fork chains) or the regular genesis.
+  // For non-fork chains forkGenesisIndex is 0 (the regular genesis).
+  const forkGenesisIndex = blocks.findIndex(
+    (b) => !b.provenance && (isGenesisBlock(b) || isForkGenesisBlock(b)),
+  );
+
+  // Extract contentSchema from the fork/regular genesis — used for post-fork blocks.
+  // Both GenesisBlock and ForkGenesisBlock carry an optional contentSchema field.
+  const forkGenesis = forkGenesisIndex >= 0 ? blocks[forkGenesisIndex] : undefined;
+  const contentSchema = (forkGenesis as GenesisBlock | undefined)?.contentSchema;
 
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
     if (block === undefined) continue;
     const errorsBeforeThisBlock = allErrors.length;
+    const isProvenance = block.provenance === true;
 
     if (seenBlockNumbers.has(block.blockNumber)) {
       allErrors.push({
@@ -45,7 +60,9 @@ export function verifyChain(chain: Chain, options?: VerifyOptions): Verification
     }
     seenBlockNumbers.add(block.blockNumber);
 
-    if (block.chainId !== chainId) {
+    // Provenance blocks carry the source chainId — skip chainId check for them.
+    // The fork genesis's forkSourceBlockHash anchors provenance to the fork genesis cryptographically.
+    if (!isProvenance && block.chainId !== chainId) {
       allErrors.push({
         code: ErrorCode.BROKEN_CHAIN,
         blockNumber: block.blockNumber,
@@ -65,7 +82,20 @@ export function verifyChain(chain: Chain, options?: VerifyOptions): Verification
 
     if (i > 0) {
       const prevBlock = blocks[i - 1];
-      if (prevBlock !== undefined && block.previousHash !== prevBlock.hash) {
+      // At the fork genesis boundary: verify forkSourceBlockHash matches last provenance block hash
+      if (!isProvenance && i === forkGenesisIndex && isForkGenesisBlock(block)) {
+        const lastProvenanceBlock = blocks[i - 1];
+        if (
+          lastProvenanceBlock !== undefined &&
+          block.forkSourceBlockHash !== lastProvenanceBlock.hash
+        ) {
+          allErrors.push({
+            code: ErrorCode.BROKEN_CHAIN,
+            blockNumber: block.blockNumber,
+            message: `Fork genesis forkSourceBlockHash does not match last provenance block hash`,
+          });
+        }
+      } else if (prevBlock !== undefined && block.previousHash !== prevBlock.hash) {
         allErrors.push({
           code: ErrorCode.BROKEN_CHAIN,
           blockNumber: block.blockNumber,
@@ -74,7 +104,13 @@ export function verifyChain(chain: Chain, options?: VerifyOptions): Verification
       }
     }
 
-    const hashResult = computeBlockHash(block, hashAlgorithm);
+    // Fork genesis blocks use genesis canonical even though their blockNumber !== 0
+    const useGenesisCanonical = isGenesisBlock(block) || isForkGenesisBlock(block);
+    const canonical = useGenesisCanonical
+      ? genesisCanonical(block as GenesisBlock)
+      : blockCanonical(block);
+
+    const hashResult = hashBlock(canonical, hashAlgorithm);
     if (!hashResult.ok) {
       allErrors.push({
         code: hashResult.error.code,
@@ -89,7 +125,6 @@ export function verifyChain(chain: Chain, options?: VerifyOptions): Verification
       });
     }
 
-    const canonical = isGenesisBlock(block) ? genesisCanonical(block) : blockCanonical(block);
     const sigResult = cryptoVerify(canonical, block.signature, block.publicKey, signatureScheme);
     if (!sigResult.ok) {
       allErrors.push({
@@ -113,8 +148,12 @@ export function verifyChain(chain: Chain, options?: VerifyOptions): Verification
       });
     }
 
-    // Schema validation — only for non-genesis blocks, only when schema + validator present
-    if (i > 0 && contentSchema !== undefined && options?.validateContent !== undefined) {
+    // Schema validation — only for post-fork non-genesis blocks, only when schema + validator present
+    if (
+      i > forkGenesisIndex &&
+      contentSchema !== undefined &&
+      options?.validateContent !== undefined
+    ) {
       const validationResult = options.validateContent(block.content, contentSchema);
       if (!validationResult.valid) {
         allErrors.push({

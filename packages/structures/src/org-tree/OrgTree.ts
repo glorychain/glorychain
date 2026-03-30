@@ -75,7 +75,9 @@ export class OrgTree {
 
   /** Direct reports of a member (active only). */
   directReports(id: string): OrgMember[] {
-    const ids = this.state.reportIndex.get(id);
+    const member = this.state.members.get(id);
+    if (!member) return [];
+    const ids = this.state.reportIndex.get(member.appointedAtBlock);
     if (!ids) return [];
     const result: OrgMember[] = [];
     for (const reportId of ids) {
@@ -112,7 +114,9 @@ export class OrgTree {
       if (visited.has(current.id)) break; // cycle guard
       visited.add(current.id);
       path.unshift(current);
-      current = current.reportsTo ? this.state.members.get(current.reportsTo) : undefined;
+      if (current.reportsTo === null) break;
+      const managerBlock = current.reportsTo;
+      current = [...this.state.members.values()].find((m) => m.appointedAtBlock === managerBlock);
     }
 
     return path;
@@ -196,7 +200,7 @@ export class OrgTree {
         id: { type: "string", minLength: 1 },
         name: { type: "string" },
         role: { type: "string" },
-        reportsTo: { type: ["string", "null"] },
+        reportsTo: { type: ["integer", "null"] },
         reason: { type: "string" },
         handoverTo: { type: "string" },
         metadata: { type: "object" },

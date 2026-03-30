@@ -9,24 +9,24 @@ function cloneState(state: OrgTreeState): OrgTreeState {
 }
 
 function indexAdd(
-  index: Map<string | null, Set<string>>,
-  managerId: string | null,
+  index: Map<number | null, Set<string>>,
+  managerBlock: number | null,
   id: string,
 ): void {
-  let set = index.get(managerId);
+  let set = index.get(managerBlock);
   if (!set) {
     set = new Set();
-    index.set(managerId, set);
+    index.set(managerBlock, set);
   }
   set.add(id);
 }
 
 function indexRemove(
-  index: Map<string | null, Set<string>>,
-  managerId: string | null,
+  index: Map<number | null, Set<string>>,
+  managerBlock: number | null,
   id: string,
 ): void {
-  index.get(managerId)?.delete(id);
+  index.get(managerBlock)?.delete(id);
 }
 
 export const orgTreeReducer: Reducer<OrgTreeState, OrgEvent> = (
@@ -68,20 +68,22 @@ export const orgTreeReducer: Reducer<OrgTreeState, OrgEvent> = (
 
       // Reassign direct reports using the index — O(k) not O(n)
       if (event.handoverTo !== undefined) {
-        const directReportIds = next.reportIndex.get(event.id);
+        const handoverMember = next.members.get(event.handoverTo);
+        const handoverBlock = handoverMember?.appointedAtBlock ?? null;
+        const directReportIds = next.reportIndex.get(member.appointedAtBlock);
         if (directReportIds) {
           for (const reportId of directReportIds) {
             const m = next.members.get(reportId);
             if (m?.active) {
               next.members.set(reportId, {
                 ...m,
-                reportsTo: event.handoverTo ?? null,
+                reportsTo: handoverBlock,
                 lastUpdatedAtBlock: blockNumber,
               });
-              indexAdd(next.reportIndex, event.handoverTo ?? null, reportId);
+              indexAdd(next.reportIndex, handoverBlock, reportId);
             }
           }
-          next.reportIndex.delete(event.id);
+          next.reportIndex.delete(member.appointedAtBlock);
         }
       }
       break;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appendBlock, createChain } from "../chain/index.js";
+import { appendBlock, createChain, forkChain } from "../chain/index.js";
 import { generateKeypair } from "../crypto/keygen.js";
 import type { Block, GenesisBlock } from "../schema/block.js";
 import type { Chain } from "../schema/chain.js";
@@ -108,6 +108,89 @@ describe("verifyChain", () => {
     expect(result.valid).toBe(false);
     // block 0 fails (tampered), block 1 is structurally clean — lastVerifiedBlock = 1
     expect(result.lastVerifiedBlock).toBe(1);
+  });
+
+  describe("fork chain with provenance blocks", () => {
+    function makeForkChain() {
+      const kp = generateKeypair();
+      if (!kp.ok) throw new Error("keygen failed");
+      const source = makeChainWithBlocks(3);
+      return {
+        kp: kp.value,
+        source,
+        fork: forkChain(
+          source,
+          2,
+          {
+            content: "fork genesis",
+            purpose: "fork",
+            creatorId: "user2",
+            identityType: "anonymous",
+            publicKey: kp.value.publicKey,
+          },
+          kp.value.privateKey,
+        ),
+      };
+    }
+
+    it("valid fork chain passes verification", () => {
+      const { fork } = makeForkChain();
+      expect(fork.ok).toBe(true);
+      if (!fork.ok) return;
+      const result = verifyChain(fork.value);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("fork chain with appended block passes verification", () => {
+      const { fork, kp } = makeForkChain();
+      expect(fork.ok).toBe(true);
+      if (!fork.ok) return;
+      const appended = appendBlock(
+        fork.value,
+        { content: "post-fork", publicKey: kp.publicKey },
+        kp.privateKey,
+      );
+      expect(appended.ok).toBe(true);
+      if (!appended.ok) return;
+      const result = verifyChain(appended.value);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
+    });
+
+    it("tampered provenance block causes BROKEN_CHAIN", () => {
+      const { fork } = makeForkChain();
+      expect(fork.ok).toBe(true);
+      if (!fork.ok) return;
+      const tampered: Chain = {
+        ...fork.value,
+        blocks: [
+          { ...(fork.value.blocks[0] as GenesisBlock), content: "tampered" },
+          ...fork.value.blocks.slice(1),
+        ] as Chain["blocks"],
+      };
+      const result = verifyChain(tampered);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "BROKEN_CHAIN")).toBe(true);
+    });
+
+    it("tampered forkSourceBlockHash causes BROKEN_CHAIN", () => {
+      const { fork } = makeForkChain();
+      expect(fork.ok).toBe(true);
+      if (!fork.ok) return;
+      const forkGenesisIdx = 3; // forkFromBlock=2, so fork genesis is at index 3
+      const forkGenesis = fork.value.blocks[forkGenesisIdx];
+      if (!forkGenesis) return;
+      const tampered: Chain = {
+        ...fork.value,
+        blocks: fork.value.blocks.map((b, i) =>
+          i === forkGenesisIdx ? { ...b, forkSourceBlockHash: "a".repeat(64) } : b,
+        ) as Chain["blocks"],
+      };
+      const result = verifyChain(tampered);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.code === "BROKEN_CHAIN")).toBe(true);
+    });
   });
 
   describe("contentSchema validation", () => {
