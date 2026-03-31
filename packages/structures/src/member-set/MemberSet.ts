@@ -1,11 +1,11 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
 import {
-  MemberEventType,
   type JoinEvent,
   type LeaveEvent,
   type Member,
   type MemberEvent,
+  MemberEventType,
   type MemberSetState,
   type ReinstateEvent,
   type RoleChangeEvent,

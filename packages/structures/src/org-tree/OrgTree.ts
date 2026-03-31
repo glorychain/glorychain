@@ -2,10 +2,10 @@ import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
 import { orgTreeReducer } from "./reducer.js";
 import {
-  OrgEventType,
   type AppointEvent,
   type DepartEvent,
   type OrgEvent,
+  OrgEventType,
   type OrgMember,
   type OrgTreeState,
   type PromoteEvent,

@@ -1,3 +1,5 @@
+export type { GenesisBlockContent, GenesisFrontmatter } from "./schemas/genesis.js";
+export { GenesisBlockContentSchema, GenesisFrontmatterSchema } from "./schemas/genesis.js";
 export type {
   AppendBlockInput,
   ContentSchemaDefinition,
@@ -10,5 +12,3 @@ export {
 } from "./validators/chain.js";
 export type { SubmitSuggestionInput } from "./validators/suggestion.js";
 export { SubmitSuggestionSchema } from "./validators/suggestion.js";
-export type { GenesisBlockContent, GenesisFrontmatter } from "./schemas/genesis.js";
-export { GenesisBlockContentSchema, GenesisFrontmatterSchema } from "./schemas/genesis.js";

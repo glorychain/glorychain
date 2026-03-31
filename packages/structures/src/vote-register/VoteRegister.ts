@@ -1,12 +1,12 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
 import {
-  VoteEventType,
   type CastEvent,
   type CloseEvent,
   type Motion,
   type MotionEvent,
   type VoteEvent,
+  VoteEventType,
   type VoteRegisterState,
   type WithdrawEvent,
 } from "./types.js";

@@ -1,5 +1,5 @@
 import type { Reducer } from "../shared/replay.js";
-import { OrgEventType, type OrgEvent, type OrgTreeState } from "./types.js";
+import { type OrgEvent, OrgEventType, type OrgTreeState } from "./types.js";
 
 function cloneState(state: OrgTreeState): OrgTreeState {
   return {

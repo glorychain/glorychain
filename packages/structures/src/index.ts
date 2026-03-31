@@ -5,7 +5,7 @@ export type { AccessEntry, AccessEvent, AccessListState } from "./access-list/in
 export { AccessEventType, AccessList } from "./access-list/index.js";
 
 export type { ChangeLogEvent, ChangeLogState, Release, ReleaseStatus } from "./changelog/index.js";
-export { ChangeLogEventType, ChangeLog } from "./changelog/index.js";
+export { ChangeLog, ChangeLogEventType } from "./changelog/index.js";
 
 export type {
   Decision,
@@ -36,7 +36,7 @@ export type { Reducer } from "./shared/index.js";
 export { parseJson, replayChain, serialiseEvent } from "./shared/index.js";
 
 export type { TimelineEntry, TimelineEvent, TimelineState } from "./timeline/index.js";
-export { TimelineEventType, Timeline } from "./timeline/index.js";
+export { Timeline, TimelineEventType } from "./timeline/index.js";
 
 export type {
   Motion,

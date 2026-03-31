@@ -1,9 +1,9 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
 import {
-  DocumentEventType,
   type Document,
   type DocumentEvent,
+  DocumentEventType,
   type DocumentRegisterState,
   type PublishEvent,
   type RestoreEvent,

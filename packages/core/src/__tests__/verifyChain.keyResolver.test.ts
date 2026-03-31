@@ -66,7 +66,11 @@ describe("verifyChain with keyResolver", () => {
 
     for (let i = 1; i < 30; i++) {
       const kp = i < 10 ? kp1 : i < 20 ? kp2 : kp3;
-      const r = appendBlock(chain.value, { content: `block ${i}`, publicKey: kp.publicKey }, kp.privateKey);
+      const r = appendBlock(
+        chain.value,
+        { content: `block ${i}`, publicKey: kp.publicKey },
+        kp.privateKey,
+      );
       if (!r.ok) throw new Error(`appendBlock failed at ${i}: ${r.error.message}`);
       chain = r;
     }

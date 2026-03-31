@@ -1,10 +1,10 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
 import {
-  DecisionEventType,
   type AnnotateEvent,
   type Decision,
   type DecisionEvent,
+  DecisionEventType,
   type DecisionLogState,
   type RecordEvent,
   type SupersedeEvent,

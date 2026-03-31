@@ -17,10 +17,7 @@ const FUTURE_TIMESTAMP_TOLERANCE_MS = 5 * 60 * 1000;
  * @param signerHint - The `publicKey` field from the block, if a hint is useful.
  * @returns base64url-encoded SPKI DER public key string.
  */
-export type KeyResolver = (
-  blockIndex: number,
-  signerHint?: string,
-) => string | Promise<string>;
+export type KeyResolver = (blockIndex: number, signerHint?: string) => string | Promise<string>;
 
 export interface VerifyOptions {
   /** Optional content validator — used when chain genesis defines a contentSchema.
@@ -53,7 +50,10 @@ function isForkGenesisBlock(block: Block | GenesisBlock): block is GenesisBlock 
 }
 
 // Sync overload — backwards compatible, no keyResolver
-export function verifyChain(chain: Chain, options?: Omit<VerifyOptions, "keyResolver">): VerificationResult;
+export function verifyChain(
+  chain: Chain,
+  options?: Omit<VerifyOptions, "keyResolver">,
+): VerificationResult;
 // Async overload — used when keyResolver is provided
 export function verifyChain(
   chain: Chain,
@@ -70,7 +70,10 @@ export function verifyChain(
   return _verifyChainSync(chain, options);
 }
 
-function _verifyChainSync(chain: Chain, options?: Omit<VerifyOptions, "keyResolver">): VerificationResult {
+function _verifyChainSync(
+  chain: Chain,
+  options?: Omit<VerifyOptions, "keyResolver">,
+): VerificationResult {
   const { blocks, metadata } = chain;
   const { hashAlgorithm, signatureScheme, chainId } = metadata;
   const allErrors: VerificationError[] = [];

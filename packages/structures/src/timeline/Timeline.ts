@@ -1,11 +1,11 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
 import {
-  TimelineEventType,
   type EntryEvent,
   type RetractEvent,
   type TimelineEntry,
   type TimelineEvent,
+  TimelineEventType,
   type TimelineState,
 } from "./types.js";
 

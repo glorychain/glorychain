@@ -28,7 +28,8 @@ export function generateFeed(chain: Chain, options?: FeedOptions): string {
 
   const entries: string[] = [];
   for (let i = blocks.length - 1; i >= 0; i--) {
-    const block = blocks[i]!;
+    const block = blocks[i];
+    if (!block) continue;
     entries.push(`  <entry>
     <id>urn:glorychain:${metadata.chainId}:block:${block.blockNumber}</id>
     <title>Block ${block.blockNumber}</title>

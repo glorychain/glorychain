@@ -11,11 +11,11 @@ vi.mock("@aws-sdk/client-s3", () => {
       const input = command.input;
 
       if (name === "PutObjectCommand") {
-        store.set(input.Key!, input.Body!);
+        store.set(input.Key, input.Body);
         return {};
       }
       if (name === "GetObjectCommand") {
-        const body = store.get(input.Key!);
+        const body = store.get(input.Key);
         if (!body) {
           const err = Object.assign(new Error("NoSuchKey"), { name: "NoSuchKey" });
           throw err;
@@ -23,18 +23,18 @@ vi.mock("@aws-sdk/client-s3", () => {
         return { Body: { transformToString: () => Promise.resolve(body) } };
       }
       if (name === "HeadObjectCommand") {
-        if (!store.has(input.Key!)) throw new Error("NotFound");
+        if (!store.has(input.Key)) throw new Error("NotFound");
         return {};
       }
       if (name === "ListObjectsV2Command") {
-        const prefix = input.Prefix!;
+        const prefix = input.Prefix;
         const contents = [...store.keys()]
           .filter((k) => k.startsWith(prefix))
           .map((Key) => ({ Key }));
         return { Contents: contents };
       }
       if (name === "DeleteObjectCommand") {
-        store.delete(input.Key!);
+        store.delete(input.Key);
         return {};
       }
       return {};

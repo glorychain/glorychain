@@ -1,8 +1,8 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
 import {
-  ChangeLogEventType,
   type ChangeLogEvent,
+  ChangeLogEventType,
   type ChangeLogState,
   type DeprecateEvent,
   type Release,
