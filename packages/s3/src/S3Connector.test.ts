@@ -8,33 +8,35 @@ vi.mock("@aws-sdk/client-s3", () => {
   class S3Client {
     async send(command: { __type: string; input: Record<string, string> }): Promise<unknown> {
       const name = command.__type;
-      const input = command.input;
+      const { input } = command;
+      const key = input["Key"] ?? "";
+      const body = input["Body"] ?? "";
+      const prefix = input["Prefix"] ?? "";
 
       if (name === "PutObjectCommand") {
-        store.set(input.Key, input.Body);
+        store.set(key, body);
         return {};
       }
       if (name === "GetObjectCommand") {
-        const body = store.get(input.Key);
-        if (!body) {
+        const stored = store.get(key);
+        if (!stored) {
           const err = Object.assign(new Error("NoSuchKey"), { name: "NoSuchKey" });
           throw err;
         }
-        return { Body: { transformToString: () => Promise.resolve(body) } };
+        return { Body: { transformToString: () => Promise.resolve(stored) } };
       }
       if (name === "HeadObjectCommand") {
-        if (!store.has(input.Key)) throw new Error("NotFound");
+        if (!store.has(key)) throw new Error("NotFound");
         return {};
       }
       if (name === "ListObjectsV2Command") {
-        const prefix = input.Prefix;
         const contents = [...store.keys()]
           .filter((k) => k.startsWith(prefix))
           .map((Key) => ({ Key }));
         return { Contents: contents };
       }
       if (name === "DeleteObjectCommand") {
-        store.delete(input.Key);
+        store.delete(key);
         return {};
       }
       return {};
