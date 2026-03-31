@@ -1,16 +1,17 @@
 // ─── Event types ────────────────────────────────────────────────────────────
 
-export type OrgEventType =
-  | "APPOINT"
-  | "DEPART"
-  | "PROMOTE"
-  | "TRANSFER" // change reporting line
-  | "RENAME" // role title change without promotion
-  | "SUSPEND"
-  | "REINSTATE";
+export enum OrgEventType {
+  APPOINT = "APPOINT",
+  DEPART = "DEPART",
+  PROMOTE = "PROMOTE",
+  TRANSFER = "TRANSFER", // change reporting line
+  RENAME = "RENAME", // role title change without promotion
+  SUSPEND = "SUSPEND",
+  REINSTATE = "REINSTATE",
+}
 
 export interface AppointEvent {
-  type: "APPOINT";
+  type: OrgEventType.APPOINT;
   id: string; // unique identifier (e.g. email, employee ID)
   name: string;
   role: string;
@@ -19,39 +20,39 @@ export interface AppointEvent {
 }
 
 export interface DepartEvent {
-  type: "DEPART";
+  type: OrgEventType.DEPART;
   id: string;
   reason?: string; // e.g. "resigned", "retired", "terminated"
   handoverTo?: string; // id of person inheriting direct reports
 }
 
 export interface PromoteEvent {
-  type: "PROMOTE";
+  type: OrgEventType.PROMOTE;
   id: string;
   role: string; // new role
   reportsTo?: number; // block number of new manager's APPOINT event, if reporting line also changes
 }
 
 export interface TransferEvent {
-  type: "TRANSFER";
+  type: OrgEventType.TRANSFER;
   id: string;
   reportsTo: number; // block number of new manager's APPOINT event
 }
 
 export interface RenameEvent {
-  type: "RENAME";
+  type: OrgEventType.RENAME;
   id: string;
   role: string; // new role title
 }
 
 export interface SuspendEvent {
-  type: "SUSPEND";
+  type: OrgEventType.SUSPEND;
   id: string;
   reason?: string;
 }
 
 export interface ReinstateEvent {
-  type: "REINSTATE";
+  type: OrgEventType.REINSTATE;
   id: string;
 }
 

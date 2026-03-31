@@ -1,12 +1,13 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
-import type {
-  ChangeLogEvent,
-  ChangeLogState,
-  DeprecateEvent,
-  Release,
-  ReleaseEvent,
-  YankEvent,
+import {
+  type ChangeLogEvent,
+  ChangeLogEventType,
+  type ChangeLogState,
+  type DeprecateEvent,
+  type Release,
+  type ReleaseEvent,
+  type YankEvent,
 } from "./types.js";
 
 const EMPTY_STATE: ChangeLogState = { releases: new Map() };
@@ -14,7 +15,7 @@ const EMPTY_STATE: ChangeLogState = { releases: new Map() };
 function parseChangeLogEvent(content: string): ChangeLogEvent | null {
   const parsed = parseJson<ChangeLogEvent>(content);
   if (!parsed || typeof parsed.type !== "string") return null;
-  if (!["RELEASE", "DEPRECATE", "YANK"].includes(parsed.type)) return null;
+  if (!Object.values(ChangeLogEventType).includes(parsed.type as ChangeLogEventType)) return null;
   return parsed;
 }
 
@@ -26,7 +27,7 @@ function changeLogReducer(
   const releases = new Map(state.releases);
 
   switch (event.type) {
-    case "RELEASE":
+    case ChangeLogEventType.RELEASE:
       releases.set(event.version, {
         version: event.version,
         notes: event.notes ?? null,
@@ -40,7 +41,7 @@ function changeLogReducer(
       });
       break;
 
-    case "DEPRECATE": {
+    case ChangeLogEventType.DEPRECATE: {
       const r = releases.get(event.version);
       if (r) {
         releases.set(event.version, {
@@ -53,7 +54,7 @@ function changeLogReducer(
       break;
     }
 
-    case "YANK": {
+    case ChangeLogEventType.YANK: {
       const r = releases.get(event.version);
       if (r) {
         releases.set(event.version, {
@@ -136,15 +137,15 @@ export class ChangeLog {
   // ─── Event builders ────────────────────────────────────────────────────────
 
   static release(input: Omit<ReleaseEvent, "type">): string {
-    return serialiseEvent<ChangeLogEvent>({ type: "RELEASE", ...input });
+    return serialiseEvent<ChangeLogEvent>({ type: ChangeLogEventType.RELEASE, ...input });
   }
 
   static deprecate(input: Omit<DeprecateEvent, "type">): string {
-    return serialiseEvent<ChangeLogEvent>({ type: "DEPRECATE", ...input });
+    return serialiseEvent<ChangeLogEvent>({ type: ChangeLogEventType.DEPRECATE, ...input });
   }
 
   static yank(input: Omit<YankEvent, "type">): string {
-    return serialiseEvent<ChangeLogEvent>({ type: "YANK", ...input });
+    return serialiseEvent<ChangeLogEvent>({ type: ChangeLogEventType.YANK, ...input });
   }
 
   static get genesisSchema() {
@@ -152,7 +153,7 @@ export class ChangeLog {
       type: "object",
       required: ["type", "version"],
       properties: {
-        type: { type: "string", enum: ["RELEASE", "DEPRECATE", "YANK"] },
+        type: { type: "string", enum: Object.values(ChangeLogEventType) },
         version: { type: "string", minLength: 1 },
         notes: { type: "string" },
         breaking: { type: "boolean" },

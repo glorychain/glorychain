@@ -232,12 +232,14 @@ describe("AppendBlockSchema", () => {
     });
 
     it("accepts full valid input with optional fields", () => {
+      // publicKey: 59-char base64url string (Ed25519 SPKI DER format)
+      // signature: 86-char base64url string (Ed25519 raw signature format)
       const result = AppendBlockSchema.safeParse({
         chainId: validChainId,
         content: "Signed decision",
         timestamp: "2026-03-22T10:00:00.000Z",
-        publicKey: "ed25519-public-key-base64url",
-        signature: "ed25519-signature-base64url",
+        publicKey: "A".repeat(59),
+        signature: "A".repeat(86),
       });
       expect(result.success).toBe(true);
     });
@@ -309,5 +311,145 @@ describe("AppendBlockSchema", () => {
       });
       expect(result.success).toBe(false);
     });
+  });
+
+  describe("publicKey validation", () => {
+    it("rejects publicKey with non-base64url characters", () => {
+      const result = AppendBlockSchema.safeParse({
+        chainId: validChainId,
+        content: "Test",
+        timestamp: "2026-03-22T10:00:00.000Z",
+        publicKey: "invalid key with spaces!",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0]?.path).toContain("publicKey");
+      }
+    });
+
+    it("rejects publicKey shorter than 43 chars", () => {
+      const result = AppendBlockSchema.safeParse({
+        chainId: validChainId,
+        content: "Test",
+        timestamp: "2026-03-22T10:00:00.000Z",
+        publicKey: "A".repeat(42),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("accepts raw 43-char base64url publicKey", () => {
+      const result = AppendBlockSchema.safeParse({
+        chainId: validChainId,
+        content: "Test",
+        timestamp: "2026-03-22T10:00:00.000Z",
+        publicKey: "A".repeat(43),
+        signature: "A".repeat(86),
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("accepts SPKI DER 59-char base64url publicKey", () => {
+      const result = AppendBlockSchema.safeParse({
+        chainId: validChainId,
+        content: "Test",
+        timestamp: "2026-03-22T10:00:00.000Z",
+        publicKey: "A".repeat(59),
+        signature: "A".repeat(86),
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe("signature validation", () => {
+    it("rejects signature with non-base64url characters", () => {
+      const result = AppendBlockSchema.safeParse({
+        chainId: validChainId,
+        content: "Test",
+        timestamp: "2026-03-22T10:00:00.000Z",
+        publicKey: "A".repeat(59),
+        signature: "not+valid/base64==",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0]?.path).toContain("signature");
+      }
+    });
+
+    it("rejects signature not exactly 86 chars", () => {
+      const result = AppendBlockSchema.safeParse({
+        chainId: validChainId,
+        content: "Test",
+        timestamp: "2026-03-22T10:00:00.000Z",
+        publicKey: "A".repeat(59),
+        signature: "A".repeat(85),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects signature of 88 chars (base64 with padding)", () => {
+      const result = AppendBlockSchema.safeParse({
+        chainId: validChainId,
+        content: "Test",
+        timestamp: "2026-03-22T10:00:00.000Z",
+        publicKey: "A".repeat(59),
+        signature: "A".repeat(88),
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("accepts exactly 86-char base64url signature", () => {
+      const result = AppendBlockSchema.safeParse({
+        chainId: validChainId,
+        content: "Test",
+        timestamp: "2026-03-22T10:00:00.000Z",
+        publicKey: "A".repeat(59),
+        signature: "A".repeat(86),
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+});
+
+describe("CreateChainSchema — hashAlgorithm and signatureScheme enum validation", () => {
+  it("rejects unsupported hashAlgorithm", () => {
+    const result = CreateChainSchema.safeParse({
+      purpose: "Test",
+      identityType: "oauth",
+      hashAlgorithm: "md5",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.path).toContain("hashAlgorithm");
+    }
+  });
+
+  it("rejects unsupported signatureScheme", () => {
+    const result = CreateChainSchema.safeParse({
+      purpose: "Test",
+      identityType: "oauth",
+      signatureScheme: "rsa",
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0]?.path).toContain("signatureScheme");
+    }
+  });
+
+  it("accepts sha256 hashAlgorithm explicitly", () => {
+    const result = CreateChainSchema.safeParse({
+      purpose: "Test",
+      identityType: "oauth",
+      hashAlgorithm: "sha256",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts ed25519 signatureScheme explicitly", () => {
+    const result = CreateChainSchema.safeParse({
+      purpose: "Test",
+      identityType: "oauth",
+      signatureScheme: "ed25519",
+    });
+    expect(result.success).toBe(true);
   });
 });

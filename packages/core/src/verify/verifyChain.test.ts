@@ -234,6 +234,7 @@ describe("verifyChain", () => {
           publicKey: kp.publicKey,
         },
         kp.privateKey,
+        { validateContent: createAjvValidator() },
       );
       if (!r.ok) throw new Error("appendBlock failed");
       const result = verifyChain(r.value, { validateContent: createAjvValidator() });

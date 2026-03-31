@@ -1,6 +1,6 @@
 {
   "name": "@glorychain/shared",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "description": "Glory Chain shared Zod validators — consumed by apps/web server and client",
   "main": "./dist/index.js",

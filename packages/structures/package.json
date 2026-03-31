@@ -1,6 +1,6 @@
 {
   "name": "@glorychain/structures",
-  "version": "0.1.1",
+  "version": "1.0.1",
   "type": "module",
   "description": "Stateful data structure utilities for glorychain — org trees, key-value stores, member sets",
   "main": "./dist/index.mjs",

@@ -8,12 +8,13 @@
 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { appendBlock, createChain, generateKeypair } from "@glorychain/core";
+import { appendBlock, createAjvValidator, createChain, generateKeypair } from "@glorychain/core";
 import { FsConnector } from "@glorychain/fs";
 import { MemberSet } from "@glorychain/structures";
 
 const { value: keypair } = generateKeypair()!;
 const { publicKey, privateKey } = keypair;
+const validator = createAjvValidator();
 
 const connector = new FsConnector(join(tmpdir(), "glorychain-examples"));
 
@@ -48,7 +49,7 @@ const events = [
 ];
 
 for (const content of events) {
-  const result = appendBlock(chain, { content, publicKey }, privateKey);
+  const result = appendBlock(chain, { content, publicKey }, privateKey, { validateContent: validator });
   if (!result.ok) throw new Error(result.error.message);
   chain = result.value;
 }

@@ -1,11 +1,16 @@
-export type VoteEventType = "MOTION" | "CAST" | "CLOSE" | "WITHDRAW";
+export enum VoteEventType {
+  MOTION = "MOTION",
+  CAST = "CAST",
+  CLOSE = "CLOSE",
+  WITHDRAW = "WITHDRAW",
+}
 
 export type VoteChoice = "yes" | "no" | "abstain";
 
 export type MotionStatus = "open" | "passed" | "failed" | "withdrawn";
 
 export interface MotionEvent {
-  type: "MOTION";
+  type: VoteEventType.MOTION;
   id: string;
   title: string;
   proposedBy?: string;
@@ -13,14 +18,14 @@ export interface MotionEvent {
 }
 
 export interface CastEvent {
-  type: "CAST";
+  type: VoteEventType.CAST;
   motionId: string;
   voterId: string;
   vote: VoteChoice;
 }
 
 export interface CloseEvent {
-  type: "CLOSE";
+  type: VoteEventType.CLOSE;
   motionId: string;
   /** Optional override. If omitted, outcome is derived from yes > no. */
   outcome?: "passed" | "failed";
@@ -28,7 +33,7 @@ export interface CloseEvent {
 }
 
 export interface WithdrawEvent {
-  type: "WITHDRAW";
+  type: VoteEventType.WITHDRAW;
   motionId: string;
   reason?: string;
 }

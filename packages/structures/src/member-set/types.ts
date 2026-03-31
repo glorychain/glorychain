@@ -1,7 +1,13 @@
-export type MemberEventType = "JOIN" | "LEAVE" | "ROLE_CHANGE" | "SUSPEND" | "REINSTATE";
+export enum MemberEventType {
+  JOIN = "JOIN",
+  LEAVE = "LEAVE",
+  ROLE_CHANGE = "ROLE_CHANGE",
+  SUSPEND = "SUSPEND",
+  REINSTATE = "REINSTATE",
+}
 
 export interface JoinEvent {
-  type: "JOIN";
+  type: MemberEventType.JOIN;
   id: string;
   name: string;
   role?: string;
@@ -9,25 +15,25 @@ export interface JoinEvent {
 }
 
 export interface LeaveEvent {
-  type: "LEAVE";
+  type: MemberEventType.LEAVE;
   id: string;
   reason?: string;
 }
 
 export interface RoleChangeEvent {
-  type: "ROLE_CHANGE";
+  type: MemberEventType.ROLE_CHANGE;
   id: string;
   role: string;
 }
 
 export interface SuspendEvent {
-  type: "SUSPEND";
+  type: MemberEventType.SUSPEND;
   id: string;
   reason?: string;
 }
 
 export interface ReinstateEvent {
-  type: "REINSTATE";
+  type: MemberEventType.REINSTATE;
   id: string;
 }
 

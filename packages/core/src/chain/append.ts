@@ -14,9 +14,8 @@ export interface AppendBlockInput {
 }
 
 export interface AppendOptions {
-  /** Optional content validator — used when the chain's genesis block defines a contentSchema.
-   *  If omitted, schema validation is skipped even if contentSchema is present.
-   *  Existing callers that omit this option are completely unaffected.
+  /** Content validator — required when the chain's genesis block defines a contentSchema.
+   *  If omitted and a contentSchema is present, appendBlock returns SCHEMA_VIOLATION.
    *  Use createAjvValidator() from @glorychain/core for the reference implementation. */
   validateContent?: ContentValidator;
 }
@@ -37,14 +36,21 @@ export function appendBlock(
     };
   }
 
-  // Schema validation — run before signing so invalid content is never committed
+  // Schema validation — run before signing so invalid content is never committed.
+  // If the chain defines a contentSchema, a validator MUST be provided.
   const genesis = chain.blocks[0];
-  if (
-    genesis !== undefined &&
-    isGenesisBlock(genesis) &&
-    genesis.contentSchema !== undefined &&
-    options?.validateContent !== undefined
-  ) {
+  if (genesis !== undefined && isGenesisBlock(genesis) && genesis.contentSchema !== undefined) {
+    if (options?.validateContent === undefined) {
+      return {
+        ok: false,
+        error: {
+          code: ErrorCode.SCHEMA_VIOLATION,
+          message:
+            "Chain defines a contentSchema — pass a validateContent option (e.g. createAjvValidator()) to appendBlock",
+          blockNumber: chain.blocks.length,
+        },
+      };
+    }
     const validationResult = options.validateContent(content, genesis.contentSchema);
     if (!validationResult.valid) {
       return {

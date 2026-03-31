@@ -1,5 +1,22 @@
 # @glorychain/s3
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @glorychain/core@0.2.0
+
+## 0.1.1
+
+### Patch Changes
+
+- 0c94a9e: Fix TypeScript strict-mode errors in S3Connector test mock — non-null assertions on `Record<string, string>` index access.
+- Updated dependencies
+- Updated dependencies [eb1e610]
+- Updated dependencies [ae1e0db]
+  - @glorychain/core@0.1.0
+
 ## 0.1.0
 
 ### Minor Changes

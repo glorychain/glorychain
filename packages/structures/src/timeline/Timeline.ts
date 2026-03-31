@@ -1,11 +1,12 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
-import type {
-  EntryEvent,
-  RetractEvent,
-  TimelineEntry,
-  TimelineEvent,
-  TimelineState,
+import {
+  type EntryEvent,
+  type RetractEvent,
+  type TimelineEntry,
+  type TimelineEvent,
+  TimelineEventType,
+  type TimelineState,
 } from "./types.js";
 
 const EMPTY_STATE: TimelineState = { entries: new Map(), activeTags: new Map() };
@@ -13,7 +14,7 @@ const EMPTY_STATE: TimelineState = { entries: new Map(), activeTags: new Map() }
 function parseTimelineEvent(content: string): TimelineEvent | null {
   const parsed = parseJson<TimelineEvent>(content);
   if (!parsed || typeof parsed.type !== "string") return null;
-  if (!["ENTRY", "RETRACT"].includes(parsed.type)) return null;
+  if (!Object.values(TimelineEventType).includes(parsed.type as TimelineEventType)) return null;
   return parsed;
 }
 
@@ -42,7 +43,7 @@ function timelineReducer(
   let activeTags = state.activeTags;
 
   switch (event.type) {
-    case "ENTRY": {
+    case TimelineEventType.ENTRY: {
       const tags = event.tags ?? [];
       entries.set(event.id, {
         id: event.id,
@@ -59,7 +60,7 @@ function timelineReducer(
       break;
     }
 
-    case "RETRACT": {
+    case TimelineEventType.RETRACT: {
       const e = entries.get(event.id);
       if (e && !e.retracted) {
         entries.set(event.id, { ...e, retracted: true, retractedAtBlock: blockNumber });
@@ -144,11 +145,11 @@ export class Timeline {
   // ─── Event builders ────────────────────────────────────────────────────────
 
   static entry(input: Omit<EntryEvent, "type">): string {
-    return serialiseEvent<TimelineEvent>({ type: "ENTRY", ...input });
+    return serialiseEvent<TimelineEvent>({ type: TimelineEventType.ENTRY, ...input });
   }
 
   static retract(input: Omit<RetractEvent, "type">): string {
-    return serialiseEvent<TimelineEvent>({ type: "RETRACT", ...input });
+    return serialiseEvent<TimelineEvent>({ type: TimelineEventType.RETRACT, ...input });
   }
 
   static get genesisSchema() {
@@ -156,7 +157,7 @@ export class Timeline {
       type: "object",
       required: ["type", "id"],
       properties: {
-        type: { type: "string", enum: ["ENTRY", "RETRACT"] },
+        type: { type: "string", enum: Object.values(TimelineEventType) },
         id: { type: "string", minLength: 1 },
         title: { type: "string" },
         body: { type: "string" },

@@ -1,5 +1,43 @@
 # @glorychain/structures
 
+## 1.0.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @glorychain/core@0.2.0
+
+## 1.0.0
+
+### Major Changes
+
+- ae1e0db: **Breaking:** `OrgTree.reportsTo` changed from `string | null` to `number | null`.
+
+  `reportsTo` now holds the block number of the manager's APPOINT event rather than a user-defined ID string. Block numbers are immutable and protocol-guaranteed unique; member IDs are user-defined and uniqueness is only enforced by convention.
+
+  **Migration:** Update all `OrgTree.appoint()`, `OrgTree.promote()`, and `OrgTree.transfer()` calls to pass the manager's `appointedAtBlock` value instead of their ID string.
+
+### Minor Changes
+
+- All structure event type aliases converted to enums.
+
+  `AccessEventType`, `ChangeLogEventType`, `DecisionEventType`, `DocumentEventType`, `KeyValueEventType`, `MemberEventType`, `OrgEventType`, `TimelineEventType`, and `VoteEventType` are now `enum` values instead of string union types.
+
+  **Migration:** Replace string literals with enum members where TypeScript requires it (e.g. `type: "GRANT"` → `type: AccessEventType.GRANT`). At runtime the values are identical — no serialisation changes.
+
+### Patch Changes
+
+- eb1e610: Fix API inaccuracies across all documentation and examples.
+
+  Notable bug fix: examples were passing `schema:` to `createChain` instead of `contentSchema:` — the wrong field was silently ignored at runtime, so schema enforcement was never applied. All examples now correctly use `contentSchema`.
+
+  Documentation corrections: protocol version `0.0.1` (was `0.1`), correct genesis block shape, canonical payload format, fork field names, `forkChain` signature, `Connector` interface, `ChainMetadata` shape, `FsConnector` constructor, `connector.write(chain)` signature, `ThreatEventType` values, `verifySingleBlock` naming, `DecisionLog`/`DocumentRegister.supersede` parameters, and `packages/shared` exports.
+
+- Updated dependencies
+- Updated dependencies [eb1e610]
+- Updated dependencies [ae1e0db]
+  - @glorychain/core@0.1.0
+
 ## 0.1.1
 
 ### Patch Changes

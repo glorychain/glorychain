@@ -1,3 +1,5 @@
+export type { GenesisBlockContent, GenesisFrontmatter } from "./schemas/genesis.js";
+export { GenesisBlockContentSchema, GenesisFrontmatterSchema } from "./schemas/genesis.js";
 export type {
   AppendBlockInput,
   ContentSchemaDefinition,

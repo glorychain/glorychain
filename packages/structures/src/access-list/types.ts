@@ -1,9 +1,13 @@
-export type AccessEventType = "GRANT" | "REVOKE" | "EXPIRE";
+export enum AccessEventType {
+  GRANT = "GRANT",
+  REVOKE = "REVOKE",
+  EXPIRE = "EXPIRE",
+}
 
 export type AccessListMode = "allowlist" | "denylist";
 
 export interface GrantEvent {
-  type: "GRANT";
+  type: AccessEventType.GRANT;
   id: string;
   label?: string;
   /** ISO date string after which the grant is considered expired. */
@@ -13,14 +17,14 @@ export interface GrantEvent {
 }
 
 export interface RevokeEvent {
-  type: "REVOKE";
+  type: AccessEventType.REVOKE;
   id: string;
   reason?: string;
   revokedBy?: string;
 }
 
 export interface ExpireEvent {
-  type: "EXPIRE";
+  type: AccessEventType.EXPIRE;
   id: string;
 }
 

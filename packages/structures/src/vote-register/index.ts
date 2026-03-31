@@ -4,7 +4,7 @@ export type {
   MotionVotes,
   VoteChoice,
   VoteEvent,
-  VoteEventType,
   VoteRegisterState,
 } from "./types.js";
+export { VoteEventType } from "./types.js";
 export { VoteRegister } from "./VoteRegister.js";

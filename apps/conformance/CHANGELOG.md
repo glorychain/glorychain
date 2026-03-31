@@ -1,5 +1,21 @@
 # @glorychain/conformance
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @glorychain/core@0.2.0
+
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies
+- Updated dependencies [eb1e610]
+- Updated dependencies [ae1e0db]
+  - @glorychain/core@0.1.0
+
 ## 0.0.3
 
 ### Patch Changes

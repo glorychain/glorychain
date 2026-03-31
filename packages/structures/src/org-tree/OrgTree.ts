@@ -1,17 +1,18 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
 import { orgTreeReducer } from "./reducer.js";
-import type {
-  AppointEvent,
-  DepartEvent,
-  OrgEvent,
-  OrgMember,
-  OrgTreeState,
-  PromoteEvent,
-  ReinstateEvent,
-  RenameEvent,
-  SuspendEvent,
-  TransferEvent,
+import {
+  type AppointEvent,
+  type DepartEvent,
+  type OrgEvent,
+  OrgEventType,
+  type OrgMember,
+  type OrgTreeState,
+  type PromoteEvent,
+  type ReinstateEvent,
+  type RenameEvent,
+  type SuspendEvent,
+  type TransferEvent,
 } from "./types.js";
 
 const EMPTY_STATE: OrgTreeState = { members: new Map(), reportIndex: new Map() };
@@ -19,8 +20,7 @@ const EMPTY_STATE: OrgTreeState = { members: new Map(), reportIndex: new Map() }
 function parseOrgEvent(content: string): OrgEvent | null {
   const parsed = parseJson<OrgEvent>(content);
   if (!parsed || typeof parsed.type !== "string") return null;
-  const validTypes = ["APPOINT", "DEPART", "PROMOTE", "TRANSFER", "RENAME", "SUSPEND", "REINSTATE"];
-  if (!validTypes.includes(parsed.type)) return null;
+  if (!Object.values(OrgEventType).includes(parsed.type as OrgEventType)) return null;
   return parsed;
 }
 
@@ -160,31 +160,31 @@ export class OrgTree {
   // These produce block content strings — pass directly to appendBlock.
 
   static appoint(input: Omit<AppointEvent, "type">): string {
-    return serialiseEvent<OrgEvent>({ type: "APPOINT", ...input });
+    return serialiseEvent<OrgEvent>({ type: OrgEventType.APPOINT, ...input });
   }
 
   static depart(input: Omit<DepartEvent, "type">): string {
-    return serialiseEvent<OrgEvent>({ type: "DEPART", ...input });
+    return serialiseEvent<OrgEvent>({ type: OrgEventType.DEPART, ...input });
   }
 
   static promote(input: Omit<PromoteEvent, "type">): string {
-    return serialiseEvent<OrgEvent>({ type: "PROMOTE", ...input });
+    return serialiseEvent<OrgEvent>({ type: OrgEventType.PROMOTE, ...input });
   }
 
   static transfer(input: Omit<TransferEvent, "type">): string {
-    return serialiseEvent<OrgEvent>({ type: "TRANSFER", ...input });
+    return serialiseEvent<OrgEvent>({ type: OrgEventType.TRANSFER, ...input });
   }
 
   static rename(input: Omit<RenameEvent, "type">): string {
-    return serialiseEvent<OrgEvent>({ type: "RENAME", ...input });
+    return serialiseEvent<OrgEvent>({ type: OrgEventType.RENAME, ...input });
   }
 
   static suspend(input: Omit<SuspendEvent, "type">): string {
-    return serialiseEvent<OrgEvent>({ type: "SUSPEND", ...input });
+    return serialiseEvent<OrgEvent>({ type: OrgEventType.SUSPEND, ...input });
   }
 
   static reinstate(input: Omit<ReinstateEvent, "type">): string {
-    return serialiseEvent<OrgEvent>({ type: "REINSTATE", ...input });
+    return serialiseEvent<OrgEvent>({ type: OrgEventType.REINSTATE, ...input });
   }
 
   /** JSON Schema for genesis block — enforces all appended blocks are valid OrgEvents. */
@@ -195,7 +195,7 @@ export class OrgTree {
       properties: {
         type: {
           type: "string",
-          enum: ["APPOINT", "DEPART", "PROMOTE", "TRANSFER", "RENAME", "SUSPEND", "REINSTATE"],
+          enum: Object.values(OrgEventType),
         },
         id: { type: "string", minLength: 1 },
         name: { type: "string" },

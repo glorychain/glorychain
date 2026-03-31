@@ -67,4 +67,4 @@ export type { ContentValidationResult, ContentValidator } from "./validate/index
 export { createAjvValidator } from "./validate/index.js";
 // Verification
 export { verifyChain, verifySingleBlock } from "./verify/index.js";
-export type { VerifyOptions } from "./verify/verifyChain.js";
+export type { KeyResolver, VerifyOptions } from "./verify/verifyChain.js";

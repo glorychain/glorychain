@@ -181,4 +181,237 @@ describe("recordForkOnSource", () => {
     recordForkOnSource(chain, "fork-chain-id", 1, "abc123");
     expect(chain.metadata.knownForks.length).toBe(0);
   });
+
+  it("calling twice with the same forkChainId produces two entries (no deduplication)", () => {
+    const { chain } = makeChainWithBlocks();
+    const once = recordForkOnSource(chain, "fork-id", 1, "abc");
+    const twice = recordForkOnSource(once, "fork-id", 1, "abc");
+    expect(twice.metadata.knownForks.length).toBe(2);
+  });
+
+  it("createdAt on appended ForkReference is a valid ISO8601 string", () => {
+    const { chain } = makeChainWithBlocks();
+    const updated = recordForkOnSource(chain, "fork-chain-id", 1, "abc123");
+    const ref = updated.metadata.knownForks[0];
+    if (!ref) throw new Error("knownForks[0] is undefined");
+    expect(Number.isNaN(new Date(ref.createdAt).getTime())).toBe(false);
+    expect(new Date(ref.createdAt).toISOString()).toBe(ref.createdAt);
+  });
+
+  it("returned chain retains all original metadata fields unchanged except knownForks", () => {
+    const { chain } = makeChainWithBlocks();
+    const updated = recordForkOnSource(chain, "fork-chain-id", 1, "abc123");
+    expect(updated.metadata.chainId).toBe(chain.metadata.chainId);
+    expect(updated.metadata.createdAt).toBe(chain.metadata.createdAt);
+    expect(updated.metadata.protocolVersion).toBe(chain.metadata.protocolVersion);
+    expect(updated.metadata.hashAlgorithm).toBe(chain.metadata.hashAlgorithm);
+    expect(updated.metadata.signatureScheme).toBe(chain.metadata.signatureScheme);
+    expect(updated.metadata.migrationHistory).toBe(chain.metadata.migrationHistory);
+  });
+
+  it("calling with forkFromBlock beyond chain length still records without throwing", () => {
+    const { chain } = makeChainWithBlocks();
+    const updated = recordForkOnSource(chain, "fork-chain-id", 9999, "abc123");
+    expect(updated.metadata.knownForks.length).toBe(1);
+    expect(updated.metadata.knownForks[0]?.forkFromBlock).toBe(9999);
+  });
+});
+
+describe("forkChain — multi-level fork", () => {
+  it("C forks B which forks A: C's fork genesis forkOf === B.metadata.chainId", () => {
+    const kp = generateKeypair();
+    if (!kp.ok) throw new Error("keygen failed");
+    const aResult = createChain(
+      {
+        content: "A",
+        purpose: "A",
+        creatorId: "u1",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    if (!aResult.ok) throw new Error("A chain failed");
+    const bResult = forkChain(
+      aResult.value,
+      0,
+      {
+        content: "B",
+        purpose: "B",
+        creatorId: "u2",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    if (!bResult.ok) throw new Error("B fork failed");
+    const chainB = bResult.value;
+    const cResult = forkChain(
+      chainB,
+      chainB.blocks.length - 1,
+      {
+        content: "C",
+        purpose: "C",
+        creatorId: "u3",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    if (!cResult.ok) throw new Error("C fork failed");
+    const chainC = cResult.value;
+    // First non-provenance block is C's fork genesis
+    const cForkGenesis = chainC.blocks.find((b) => !b.provenance) as ForkGenesisBlock | undefined;
+    expect(cForkGenesis?.forkOf).toBe(chainB.metadata.chainId);
+  });
+
+  it("C's provenance block count equals B's fork point + 1", () => {
+    const kp = generateKeypair();
+    if (!kp.ok) throw new Error("keygen failed");
+    const aResult = createChain(
+      {
+        content: "A",
+        purpose: "A",
+        creatorId: "u1",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    if (!aResult.ok) throw new Error("A chain failed");
+    const bResult = forkChain(
+      aResult.value,
+      0,
+      {
+        content: "B",
+        purpose: "B",
+        creatorId: "u2",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    if (!bResult.ok) throw new Error("B fork failed");
+    const chainB = bResult.value;
+    const bForkPoint = chainB.blocks.length - 1;
+    const cResult = forkChain(
+      chainB,
+      bForkPoint,
+      {
+        content: "C",
+        purpose: "C",
+        creatorId: "u3",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    if (!cResult.ok) throw new Error("C fork failed");
+    const provenanceCount = cResult.value.blocks.filter((b) => b.provenance === true).length;
+    expect(provenanceCount).toBe(bForkPoint + 1);
+  });
+});
+
+describe("forkChain — fork at block 0", () => {
+  it("produces exactly 2 blocks (1 provenance + 1 fork genesis)", () => {
+    const kp = generateKeypair();
+    if (!kp.ok) throw new Error("keygen failed");
+    const source = createChain(
+      {
+        content: "genesis",
+        purpose: "test",
+        creatorId: "u1",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    if (!source.ok) throw new Error("createChain failed");
+    const result = forkChain(
+      source.value,
+      0,
+      {
+        content: "fork genesis",
+        purpose: "fork",
+        creatorId: "u2",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.blocks.length).toBe(2);
+  });
+
+  it("provenance block at index 0 has provenance: true and hash matches source genesis", () => {
+    const kp = generateKeypair();
+    if (!kp.ok) throw new Error("keygen failed");
+    const source = createChain(
+      {
+        content: "genesis",
+        purpose: "test",
+        creatorId: "u1",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    if (!source.ok) throw new Error("createChain failed");
+    const result = forkChain(
+      source.value,
+      0,
+      {
+        content: "fork genesis",
+        purpose: "fork",
+        creatorId: "u2",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.blocks[0]?.provenance).toBe(true);
+    expect(result.value.blocks[0]?.hash).toBe(source.value.blocks[0]?.hash);
+  });
+
+  it("fork genesis at index 1 has forkFromBlock === 0", () => {
+    const kp = generateKeypair();
+    if (!kp.ok) throw new Error("keygen failed");
+    const source = createChain(
+      {
+        content: "genesis",
+        purpose: "test",
+        creatorId: "u1",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    if (!source.ok) throw new Error("createChain failed");
+    const result = forkChain(
+      source.value,
+      0,
+      {
+        content: "fork genesis",
+        purpose: "fork",
+        creatorId: "u2",
+        identityType: "anonymous",
+        publicKey: kp.value.publicKey,
+      },
+      kp.value.privateKey,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const forkGenesis = result.value.blocks[1] as unknown as ForkGenesisBlock;
+    expect(forkGenesis.forkFromBlock).toBe(0);
+  });
+});
+
+describe("forkChain — forkSourceBlockHash", () => {
+  it(// TODO: implement assertion when verify() checks fork genesis forkSourceBlockHash integrity.
+  // The field is included in genesisCanonical() and signed — tampering invalidates the signature.
+  // See: packages/core/src/chain/verify.ts (deferred to Phase 3)
+  "TODO: verifier detects tampered forkSourceBlockHash — signature-covered field", () => {});
 });

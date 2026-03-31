@@ -1,9 +1,14 @@
-export type DecisionEventType = "RECORD" | "SUPERSEDE" | "WITHDRAW" | "ANNOTATE";
+export enum DecisionEventType {
+  RECORD = "RECORD",
+  SUPERSEDE = "SUPERSEDE",
+  WITHDRAW = "WITHDRAW",
+  ANNOTATE = "ANNOTATE",
+}
 
 export type DecisionStatus = "active" | "superseded" | "withdrawn";
 
 export interface RecordEvent {
-  type: "RECORD";
+  type: DecisionEventType.RECORD;
   id: string;
   title: string;
   body: string;
@@ -12,20 +17,20 @@ export interface RecordEvent {
 }
 
 export interface SupersedeEvent {
-  type: "SUPERSEDE";
+  type: DecisionEventType.SUPERSEDE;
   id: string;
   supersededBy: string;
   reason?: string;
 }
 
 export interface WithdrawDecisionEvent {
-  type: "WITHDRAW";
+  type: DecisionEventType.WITHDRAW;
   id: string;
   reason?: string;
 }
 
 export interface AnnotateEvent {
-  type: "ANNOTATE";
+  type: DecisionEventType.ANNOTATE;
   id: string;
   note: string;
 }

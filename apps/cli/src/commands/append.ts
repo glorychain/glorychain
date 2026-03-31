@@ -1,4 +1,4 @@
-import { appendBlock } from "@glorychain/core";
+import { appendBlock, createAjvValidator } from "@glorychain/core";
 import { FsConnector } from "@glorychain/fs";
 import { Command } from "commander";
 import { printError, printHuman, printSuccess, setJsonMode } from "../utils/output.js";
@@ -31,6 +31,7 @@ export function makeAppendCommand(): Command {
           chain,
           { content: opts.content, publicKey: opts.pubkey },
           opts.key,
+          { validateContent: createAjvValidator() },
         );
         if (!result.ok) {
           printError(result.error.message);

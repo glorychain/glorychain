@@ -1,13 +1,14 @@
 import type { Chain } from "@glorychain/core";
 import { parseJson, replayChain, serialiseEvent } from "../shared/replay.js";
-import type {
-  Document,
-  DocumentEvent,
-  DocumentRegisterState,
-  PublishEvent,
-  RestoreEvent,
-  SupersedeDocumentEvent,
-  WithdrawDocumentEvent,
+import {
+  type Document,
+  type DocumentEvent,
+  DocumentEventType,
+  type DocumentRegisterState,
+  type PublishEvent,
+  type RestoreEvent,
+  type SupersedeDocumentEvent,
+  type WithdrawDocumentEvent,
 } from "./types.js";
 
 const EMPTY_STATE: DocumentRegisterState = { documents: new Map(), hashIndex: new Map() };
@@ -15,7 +16,7 @@ const EMPTY_STATE: DocumentRegisterState = { documents: new Map(), hashIndex: ne
 function parseDocumentEvent(content: string): DocumentEvent | null {
   const parsed = parseJson<DocumentEvent>(content);
   if (!parsed || typeof parsed.type !== "string") return null;
-  if (!["PUBLISH", "SUPERSEDE", "WITHDRAW", "RESTORE"].includes(parsed.type)) return null;
+  if (!Object.values(DocumentEventType).includes(parsed.type as DocumentEventType)) return null;
   return parsed;
 }
 
@@ -28,7 +29,7 @@ function documentReducer(
   const hashIndex = new Map(state.hashIndex);
 
   switch (event.type) {
-    case "PUBLISH":
+    case DocumentEventType.PUBLISH:
       documents.set(event.id, {
         id: event.id,
         title: event.title,
@@ -44,7 +45,7 @@ function documentReducer(
       hashIndex.set(event.hash, event.id);
       break;
 
-    case "SUPERSEDE": {
+    case DocumentEventType.SUPERSEDE: {
       const d = documents.get(event.id);
       if (d) {
         documents.set(event.id, {
@@ -57,7 +58,7 @@ function documentReducer(
       break;
     }
 
-    case "WITHDRAW": {
+    case DocumentEventType.WITHDRAW: {
       const d = documents.get(event.id);
       if (d) {
         documents.set(event.id, {
@@ -69,7 +70,7 @@ function documentReducer(
       break;
     }
 
-    case "RESTORE": {
+    case DocumentEventType.RESTORE: {
       const d = documents.get(event.id);
       if (d) {
         documents.set(event.id, {
@@ -153,19 +154,19 @@ export class DocumentRegister {
   // ─── Event builders ────────────────────────────────────────────────────────
 
   static publish(input: Omit<PublishEvent, "type">): string {
-    return serialiseEvent<DocumentEvent>({ type: "PUBLISH", ...input });
+    return serialiseEvent<DocumentEvent>({ type: DocumentEventType.PUBLISH, ...input });
   }
 
   static supersede(input: Omit<SupersedeDocumentEvent, "type">): string {
-    return serialiseEvent<DocumentEvent>({ type: "SUPERSEDE", ...input });
+    return serialiseEvent<DocumentEvent>({ type: DocumentEventType.SUPERSEDE, ...input });
   }
 
   static withdraw(input: Omit<WithdrawDocumentEvent, "type">): string {
-    return serialiseEvent<DocumentEvent>({ type: "WITHDRAW", ...input });
+    return serialiseEvent<DocumentEvent>({ type: DocumentEventType.WITHDRAW, ...input });
   }
 
   static restore(input: Omit<RestoreEvent, "type">): string {
-    return serialiseEvent<DocumentEvent>({ type: "RESTORE", ...input });
+    return serialiseEvent<DocumentEvent>({ type: DocumentEventType.RESTORE, ...input });
   }
 
   static get genesisSchema() {
@@ -173,7 +174,7 @@ export class DocumentRegister {
       type: "object",
       required: ["type", "id"],
       properties: {
-        type: { type: "string", enum: ["PUBLISH", "SUPERSEDE", "WITHDRAW", "RESTORE"] },
+        type: { type: "string", enum: Object.values(DocumentEventType) },
         id: { type: "string", minLength: 1 },
         title: { type: "string" },
         hash: { type: "string" },

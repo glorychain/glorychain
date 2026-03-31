@@ -1,5 +1,5 @@
 import type { Reducer } from "../shared/replay.js";
-import type { OrgEvent, OrgTreeState } from "./types.js";
+import { type OrgEvent, OrgEventType, type OrgTreeState } from "./types.js";
 
 function cloneState(state: OrgTreeState): OrgTreeState {
   return {
@@ -37,7 +37,7 @@ export const orgTreeReducer: Reducer<OrgTreeState, OrgEvent> = (
   const next = cloneState(state);
 
   switch (event.type) {
-    case "APPOINT": {
+    case OrgEventType.APPOINT: {
       next.members.set(event.id, {
         id: event.id,
         name: event.name,
@@ -53,7 +53,7 @@ export const orgTreeReducer: Reducer<OrgTreeState, OrgEvent> = (
       break;
     }
 
-    case "DEPART": {
+    case OrgEventType.DEPART: {
       const member = next.members.get(event.id);
       if (!member) break;
 
@@ -89,7 +89,7 @@ export const orgTreeReducer: Reducer<OrgTreeState, OrgEvent> = (
       break;
     }
 
-    case "PROMOTE": {
+    case OrgEventType.PROMOTE: {
       const member = next.members.get(event.id);
       if (!member) break;
       const newReportsTo = event.reportsTo !== undefined ? event.reportsTo : member.reportsTo;
@@ -106,7 +106,7 @@ export const orgTreeReducer: Reducer<OrgTreeState, OrgEvent> = (
       break;
     }
 
-    case "TRANSFER": {
+    case OrgEventType.TRANSFER: {
       const member = next.members.get(event.id);
       if (!member) break;
       indexRemove(next.reportIndex, member.reportsTo, event.id);
@@ -119,7 +119,7 @@ export const orgTreeReducer: Reducer<OrgTreeState, OrgEvent> = (
       break;
     }
 
-    case "RENAME": {
+    case OrgEventType.RENAME: {
       const member = next.members.get(event.id);
       if (!member) break;
       next.members.set(event.id, {
@@ -130,7 +130,7 @@ export const orgTreeReducer: Reducer<OrgTreeState, OrgEvent> = (
       break;
     }
 
-    case "SUSPEND": {
+    case OrgEventType.SUSPEND: {
       const member = next.members.get(event.id);
       if (!member) break;
       next.members.set(event.id, {
@@ -141,7 +141,7 @@ export const orgTreeReducer: Reducer<OrgTreeState, OrgEvent> = (
       break;
     }
 
-    case "REINSTATE": {
+    case OrgEventType.REINSTATE: {
       const member = next.members.get(event.id);
       if (!member) break;
       next.members.set(event.id, {

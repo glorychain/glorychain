@@ -39,6 +39,57 @@ describe("SubmitSuggestionSchema", () => {
       });
       expect(result.success).toBe(false);
     });
+
+    it("rejects chainSlug shorter than 3 chars", () => {
+      const result = SubmitSuggestionSchema.safeParse({
+        chainSlug: "ab",
+        content: "Test content",
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0]?.path).toContain("chainSlug");
+      }
+    });
+
+    it("rejects chainSlug longer than 50 chars", () => {
+      const result = SubmitSuggestionSchema.safeParse({
+        chainSlug: "a".repeat(51),
+        content: "Test content",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects chainSlug with uppercase letters", () => {
+      const result = SubmitSuggestionSchema.safeParse({
+        chainSlug: "MyChain",
+        content: "Test content",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects chainSlug starting with a hyphen", () => {
+      const result = SubmitSuggestionSchema.safeParse({
+        chainSlug: "-my-chain",
+        content: "Test content",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("rejects chainSlug ending with a hyphen", () => {
+      const result = SubmitSuggestionSchema.safeParse({
+        chainSlug: "my-chain-",
+        content: "Test content",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("accepts valid slug with hyphens in the middle", () => {
+      const result = SubmitSuggestionSchema.safeParse({
+        chainSlug: "my-ngo-chain",
+        content: "Test content",
+      });
+      expect(result.success).toBe(true);
+    });
   });
 
   describe("content validation", () => {
