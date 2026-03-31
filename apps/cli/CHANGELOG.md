@@ -1,5 +1,14 @@
 # @glorychain/cli
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @glorychain/core@0.2.0
+  - @glorychain/fs@0.0.4
+  - @glorychain/github@0.0.4
+
 ## 0.1.1
 
 ### Patch Changes

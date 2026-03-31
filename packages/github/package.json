@@ -1,6 +1,6 @@
 {
   "name": "@glorychain/github",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "description": "Glory Chain GitHub connector",
   "main": "./dist/index.mjs",

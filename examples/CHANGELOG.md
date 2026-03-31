@@ -1,5 +1,14 @@
 # @glorychain/examples
 
+## 0.0.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @glorychain/core@0.2.0
+  - @glorychain/fs@0.0.4
+  - @glorychain/structures@1.0.1
+
 ## 0.0.1
 
 ### Patch Changes

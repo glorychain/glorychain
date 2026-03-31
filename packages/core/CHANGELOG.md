@@ -1,5 +1,24 @@
 # @glorychain/core
 
+## 0.2.0
+
+### Minor Changes
+
+- Add async `verifyChain` overload with `KeyResolver` support, `MISSING_KEY` error code, and genesis block schemas.
+
+  **@glorychain/core**
+
+  - `verifyChain` now accepts an optional `keyResolver` callback for async key lookup (key rotation, multi-key chains)
+  - New `KeyResolver` type exported from the package
+  - New `MISSING_KEY` (`MISSING_KEY`) `ErrorCode` returned when no key can be resolved for a block
+  - `VerifyOptions` now exported as a public type
+
+  **@glorychain/shared**
+
+  - New `GenesisBlockContentSchema` and `GenesisFrontmatterSchema` Zod schemas
+  - `GenesisBlockContent` and `GenesisFrontmatter` types exported
+  - Expanded chain and suggestion validators
+
 ## 0.1.0
 
 ### Minor Changes

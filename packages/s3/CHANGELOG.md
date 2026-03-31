@@ -1,5 +1,12 @@
 # @glorychain/s3
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @glorychain/core@0.2.0
+
 ## 0.1.1
 
 ### Patch Changes
