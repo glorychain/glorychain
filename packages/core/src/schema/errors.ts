@@ -11,6 +11,7 @@ export const ErrorCode = {
   FUTURE_TIMESTAMP: "FUTURE_TIMESTAMP",
   DUPLICATE_BLOCK: "DUPLICATE_BLOCK",
   SCHEMA_VIOLATION: "SCHEMA_VIOLATION", // block content failed genesis contentSchema validation
+  MISSING_KEY: "MISSING_KEY", // no public key available for block verification
 } as const;
 
 export type ErrorCodeValue = (typeof ErrorCode)[keyof typeof ErrorCode];

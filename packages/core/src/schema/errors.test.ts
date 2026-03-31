@@ -3,7 +3,7 @@ import type { ErrorCodeValue, GloryChainError, Result } from "./errors.js";
 import { ErrorCode } from "./errors.js";
 
 describe("ErrorCode", () => {
-  it("is a const object with all 9 error codes", () => {
+  it("is a const object with all 10 error codes", () => {
     expect(ErrorCode.INVALID_SIGNATURE).toBe("INVALID_SIGNATURE");
     expect(ErrorCode.BROKEN_CHAIN).toBe("BROKEN_CHAIN");
     expect(ErrorCode.REPLAY_DETECTED).toBe("REPLAY_DETECTED");
@@ -13,10 +13,11 @@ describe("ErrorCode", () => {
     expect(ErrorCode.FUTURE_TIMESTAMP).toBe("FUTURE_TIMESTAMP");
     expect(ErrorCode.DUPLICATE_BLOCK).toBe("DUPLICATE_BLOCK");
     expect(ErrorCode.SCHEMA_VIOLATION).toBe("SCHEMA_VIOLATION");
+    expect(ErrorCode.MISSING_KEY).toBe("MISSING_KEY");
   });
 
-  it("has exactly 9 keys", () => {
-    expect(Object.keys(ErrorCode).length).toBe(9);
+  it("has exactly 10 keys", () => {
+    expect(Object.keys(ErrorCode).length).toBe(10);
   });
 });
 
